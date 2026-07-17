@@ -1,0 +1,17 @@
+{
+  "width": 12,
+  "height": 16,
+  "colors": [
+    "#000000",
+    "#d60101",
+    "#6e6600",
+    "#f6a901"
+  ],
+  "layerCount": 1,
+  "chunkSize": 50,
+  "scale": 20,
+  "cssVarPrefix": "color",
+  "selector": ".pixel-image",
+  "layerClass": "pixel-image__layer",
+  "hasAlpha": false
+}

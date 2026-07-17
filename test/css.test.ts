@@ -1,0 +1,67 @@
+import { describe, expect, it } from "vitest";
+import { convert } from "../src/index.js";
+import type { DecodedImage } from "../src/types.js";
+
+// 2x2 checkerboard: red / blue / blue / red
+const checker: DecodedImage = {
+  width: 2,
+  height: 2,
+  data: Uint8Array.from([
+    255, 0, 0, 255, 0, 0, 255, 255, 0, 0, 255, 255, 255, 0, 0, 255,
+  ]),
+};
+
+describe("convert (full pipeline)", () => {
+  it("produces a palette, container, and layer rules", () => {
+    const { css, meta } = convert(checker);
+    expect(meta.colors).toEqual(["#ff0000", "#0000ff"]);
+    expect(meta.layerCount).toBe(1);
+    expect(css).toContain("--color-0: #ff0000;");
+    expect(css).toContain("--color-1: #0000ff;");
+    expect(css).toContain(".pixel-image {");
+    expect(css).toContain(".pixel-image > .pixel-image__layer:nth-child(1)");
+    expect(css).toContain("aspect-ratio: 2 / 2;");
+  });
+
+  it("honors sizing: percent", () => {
+    const { css } = convert(checker, { sizing: "percent" });
+    expect(css).toContain("--pixel-width: calc(100% / 2);");
+    expect(css).not.toContain("container-type");
+  });
+
+  it("emits @property blocks when requested", () => {
+    const { css } = convert(checker, { emitAtProperty: true });
+    expect(css).toContain("@property --color-0");
+    expect(css).toContain('syntax: "<color>";');
+  });
+
+  it("splits into multiple layers via layerChunkSize", () => {
+    const tall: DecodedImage = {
+      width: 1,
+      height: 4,
+      data: Uint8Array.from([
+        0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255,
+      ]),
+    };
+    const { css, meta } = convert(tall, { layerChunkSize: 2 });
+    expect(meta.layerCount).toBe(2);
+    expect(css).toContain(":nth-child(2)");
+  });
+
+  it("throws for pseudo mode with more than 2 layers", () => {
+    const tall: DecodedImage = {
+      width: 1,
+      height: 6,
+      data: Uint8Array.from(new Array(6).fill([0, 0, 0, 255]).flat()),
+    };
+    expect(() =>
+      convert(tall, { layerElement: "pseudo", layerChunkSize: 2 }),
+    ).toThrow(/pseudo/);
+  });
+
+  it("minifies when requested", () => {
+    const { css } = convert(checker, { minify: true });
+    expect(css).not.toContain("\n");
+    expect(css).toContain("--color-0:#ff0000");
+  });
+});

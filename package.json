@@ -1,0 +1,64 @@
+{
+  "name": "pixel-css",
+  "version": "0.1.0",
+  "description": "Convert any image into pure CSS pixel-art with a live-controllable color palette (CSS custom properties). CLI + library + zero-dependency Web Component.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "css",
+    "pixel-art",
+    "image-to-css",
+    "gradient",
+    "palette",
+    "web-component",
+    "recolor",
+    "quantize"
+  ],
+  "bin": {
+    "pixel-css": "./dist/cli.js"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./widget": {
+      "types": "./dist/widget/index.d.ts",
+      "import": "./dist/widget/index.js"
+    },
+    "./widget/pixel-image.js": "./dist/widget/pixel-image.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "./dist/widget/*"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "demo": "npm run build && node scripts/serve.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "author": "Łukasz Sobolewski",
+  "dependencies": {
+    "image-q": "^4.0.0",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

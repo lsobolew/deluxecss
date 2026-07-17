@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>pixel-css — live palette demo</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 32px;
+        background: #101418;
+        color: #e6e6e6;
+      }
+      h1 { font-size: 20px; }
+      p { max-width: 60ch; color: #aab; }
+      code { background: #222; padding: 1px 5px; border-radius: 4px; }
+      .stage { margin-top: 24px; }
+    </style>
+  </head>
+  <body>
+    <h1>pixel-css — live-controllable CSS pixel art</h1>
+    <p>
+      The image below is pure CSS: layered <code>linear-gradient</code>s whose
+      colors are <code>--color-*</code> custom properties. Drag the pickers to
+      recolor it live — no image is regenerated. That's the edge over a base64
+      background.
+    </p>
+
+    <div class="stage">
+      <pixel-image
+        css="assets/mario.css"
+        meta="assets/mario.json"
+        scale="20"
+        controls
+      ></pixel-image>
+    </div>
+
+    <p style="margin-top: 32px">
+      Served over http (see <code>npm run demo</code>). The
+      <code>&lt;pixel-image&gt;</code> element fetches the generated CSS + JSON,
+      builds the layer DOM in its shadow root, and exposes the palette panel.
+    </p>
+
+    <!-- Registers <pixel-image> and auto-defines it. -->
+    <script type="module">
+      import "../dist/widget/index.js";
+    </script>
+  </body>
+</html>
