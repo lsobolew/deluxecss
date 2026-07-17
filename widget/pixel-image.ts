@@ -48,6 +48,7 @@ export class PixelImage extends HTMLElement {
   }
 
   private root: ShadowRoot;
+  private stage: HTMLElement | null = null;
   private _cssText: string | null = null;
   private _meta: WidgetMeta | null = null;
   private currentColors: string[] = [];
@@ -140,6 +141,11 @@ export class PixelImage extends HTMLElement {
       ${controls}
     </div>`;
 
+    // The layers inherit palette variables from their nearest ancestor that
+    // defines them — the `.palette` stage element, not `:host`. Overrides must
+    // therefore be applied to the stage so they actually reach the layers.
+    this.stage = this.root.querySelector<HTMLElement>(".px-stage");
+
     this.applyScale();
     this.applyAllColors();
     if (this.hasAttribute("controls")) this.wireControls(meta);
@@ -152,7 +158,7 @@ export class PixelImage extends HTMLElement {
         const control = editable
           ? `<input type="color" data-idx="${i}" value="${toHex(color)}" />`
           : `<span class="px-chip" title="${color}"></span>`;
-        return `<div class="px-row">${control}<code>--${meta.cssVarPrefix}-${i}</code><span>${color}</span></div>`;
+        return `<div class="px-row">${control}<code>--${meta.cssVarPrefix}-${i}</code><span data-val="${i}">${color}</span></div>`;
       })
       .join("");
 
@@ -177,6 +183,7 @@ export class PixelImage extends HTMLElement {
           const idx = Number(input.dataset.idx);
           this.currentColors[idx] = input.value;
           this.setColorVar(idx, input.value);
+          this.updateLabel(idx, input.value);
         });
       },
     );
@@ -192,6 +199,7 @@ export class PixelImage extends HTMLElement {
         const shifted = shiftHue(color, this.hueShift);
         this.currentColors[i] = shifted;
         this.setColorVar(i, shifted);
+        this.updateLabel(i, shifted);
         const picker = this.root.querySelector<HTMLInputElement>(
           `input[type="color"][data-idx="${i}"]`,
         );
@@ -217,7 +225,8 @@ export class PixelImage extends HTMLElement {
   }
 
   private setColorVar(idx: number, value: string): void {
-    this.style.setProperty(`--${this._meta!.cssVarPrefix}-${idx}`, value);
+    const target = this.stage ?? this;
+    target.style.setProperty(`--${this._meta!.cssVarPrefix}-${idx}`, value);
   }
 
   private applyAllColors(): void {
@@ -225,9 +234,15 @@ export class PixelImage extends HTMLElement {
     this.currentColors.forEach((c, i) => this.setColorVar(i, c));
   }
 
+  private updateLabel(idx: number, value: string): void {
+    const span = this.root.querySelector<HTMLElement>(`span[data-val="${idx}"]`);
+    if (span) span.textContent = value;
+  }
+
   private applyScale(): void {
     const scale = this.getAttribute("scale");
-    if (scale !== null) this.style.setProperty("--scale", scale);
+    const target = this.stage ?? this;
+    if (scale !== null) target.style.setProperty("--scale", scale);
   }
 
   /** The current palette as a CSS rule. */
