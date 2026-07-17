@@ -1,16 +1,22 @@
 import sharp from "sharp";
-import type { DecodedImage } from "./types.js";
+import type { DecodedFrames, DecodedImage } from "./types.js";
+
+type SharpInput = Parameters<typeof sharp>[0];
 
 /**
  * Decode an image (PNG/JPEG/WebP/GIF/…) into tightly-packed RGBA pixels.
  * Accepts a file path, or an in-memory Buffer/Uint8Array of encoded image bytes.
+ * Pass `resize` to downscale to that width (nearest-neighbor, aspect preserved).
  */
 export async function decode(
   input: string | Buffer | Uint8Array,
+  resize?: number,
 ): Promise<DecodedImage> {
-  const pipeline = sharp(input as Parameters<typeof sharp>[0]);
+  let pipeline = sharp(input as SharpInput);
+  if (resize) pipeline = pipeline.resize({ width: resize, kernel: "nearest" });
+
   const { data, info } = await pipeline
-    .ensureAlpha() // guarantee 4 channels regardless of source
+    .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
 
@@ -25,4 +31,38 @@ export async function decode(
     height: info.height,
     data: new Uint8Array(data.buffer, data.byteOffset, data.byteLength),
   };
+}
+
+/**
+ * Decode every frame of an animated image (GIF/WebP/APNG) into RGBA buffers that
+ * share one canvas size. Pass `resize` to downscale each frame's width.
+ */
+export async function decodeFrames(
+  input: string | Buffer | Uint8Array,
+  resize?: number,
+): Promise<DecodedFrames> {
+  const meta = await sharp(input as SharpInput, { animated: true }).metadata();
+  const pageCount = meta.pages ?? 1;
+  const srcWidth = meta.width ?? 0;
+  const srcHeight = meta.pageHeight ?? meta.height ?? 0;
+  const delaysMeta = meta.delay ?? [];
+
+  const width = resize ?? srcWidth;
+  const height = resize ? Math.round((resize * srcHeight) / srcWidth) : srcHeight;
+
+  const frames: Uint8Array[] = [];
+  const delays: number[] = [];
+
+  for (let page = 0; page < pageCount; page++) {
+    let pipeline = sharp(input as SharpInput, { page });
+    if (resize) pipeline = pipeline.resize({ width: resize, kernel: "nearest" });
+    const { data } = await pipeline
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    frames.push(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+    delays.push(delaysMeta[page] ?? 100);
+  }
+
+  return { width, height, frames, delays };
 }

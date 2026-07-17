@@ -31,6 +31,14 @@ export function buildCss(
     );
   }
 
+  const single = opts.singleElement;
+  if (single && layers.length > 1) {
+    throw new Error(
+      `singleElement requires the image to fit in one layer, but it needs ${layers.length}. ` +
+        `Increase layerChunkSize/maxStopsPerLayer, or set singleElement: false.`,
+    );
+  }
+
   const baseClass = selector.startsWith(".") ? selector.slice(1) : selector;
   const layerClass = `${baseClass}__layer`;
 
@@ -51,11 +59,22 @@ export function buildCss(
     .join("\n");
   blocks.push(`${paletteSelector} {\n${paletteVars}\n}`);
 
-  // Container / sizing.
-  blocks.push(`${selector} {\n${sizingDecls(width, height, sizing, scale)}\n}`);
+  // Container / sizing (+ background painted directly on it in single-element mode).
+  let containerBody = sizingDecls(width, height, sizing, scale);
+  if (single && layers.length === 1) {
+    const layer = layers[0]!;
+    containerBody +=
+      `\n  background-repeat: no-repeat;` +
+      `\n  background-size: 100% var(--pixel-height);` +
+      `\n  background-image: ${layer.backgroundImage};` +
+      `\n  background-position: ${layer.backgroundPosition};`;
+  }
+  blocks.push(`${selector} {\n${containerBody}\n}`);
 
   // Layers.
-  if (layerElement === "pseudo") {
+  if (single) {
+    // Painted on the container above; no child layers emitted.
+  } else if (layerElement === "pseudo") {
     const pseudos = ["::before", "::after"];
     for (let i = 0; i < layers.length; i++) {
       const layer = layers[i]!;

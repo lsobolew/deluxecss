@@ -2,57 +2,22 @@ import { buildCss } from "./css.js";
 import { decode } from "./decode.js";
 import { packLayers } from "./layers.js";
 import { buildMeta } from "./meta.js";
+import { resolveOptions } from "./options.js";
 import { buildIndexedImage } from "./palette.js";
 import { buildRowGradients } from "./rle.js";
-import type {
-  ConvertResult,
-  DecodedImage,
-  Meta,
-  Options,
-  ResolvedOptions,
-} from "./types.js";
+import type { ConvertResult, DecodedImage, Meta, Options } from "./types.js";
 
 export type {
   ConvertResult,
+  DecodedFrames,
   DecodedImage,
   IndexedImage,
   Meta,
   Options,
 } from "./types.js";
-export { decode } from "./decode.js";
-
-const DEFAULTS: ResolvedOptions = {
-  maxColors: undefined,
-  dither: false,
-  alphaThreshold: 128,
-  alphaMode: "binary",
-  scale: 1,
-  sizing: "container",
-  layerChunkSize: 50,
-  layerElement: "div",
-  maxStopsPerLayer: 4000,
-  cssVarPrefix: "color",
-  selector: ".pixel-image",
-  paletteSelector: ":host, .palette",
-  colorFormat: "hex",
-  emitMeta: true,
-  emitHtml: false,
-  emitAtProperty: false,
-  minify: false,
-};
-
-export function resolveOptions(options: Options = {}): ResolvedOptions {
-  return { ...DEFAULTS, ...clean(options) };
-}
-
-/** Drop `undefined` values so they don't clobber defaults via spread. */
-function clean<T extends object>(obj: T): Partial<T> {
-  const out: Partial<T> = {};
-  for (const key of Object.keys(obj) as (keyof T)[]) {
-    if (obj[key] !== undefined) out[key] = obj[key];
-  }
-  return out;
-}
+export { decode, decodeFrames } from "./decode.js";
+export { resolveOptions } from "./options.js";
+export { convertAnimated, animateImageToCss } from "./animate.js";
 
 /**
  * Convert an already-decoded RGBA image to CSS. Synchronous and dependency-free
@@ -69,7 +34,9 @@ export function convert(
 
   const indexed = buildIndexedImage(image, opts);
   const rows = buildRowGradients(indexed, opts.cssVarPrefix);
-  const layers = packLayers(rows, opts.layerChunkSize, opts.maxStopsPerLayer);
+  const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
+  const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
+  const layers = packLayers(rows, chunk, stopBudget);
   const { css, layerClass } = buildCss(indexed, layers, opts);
   const meta = buildMeta(indexed, layers, opts, layerClass);
 
@@ -88,7 +55,7 @@ export async function imageToCss(
   input: string | Buffer | Uint8Array,
   options: Options = {},
 ): Promise<ConvertResult> {
-  const image = await decode(input);
+  const image = await decode(input, options.resize);
   return convert(image, options);
 }
 

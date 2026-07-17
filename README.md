@@ -16,10 +16,13 @@ runtime** by changing a variable — no re-export, no image swap.
 }
 ```
 
-Ships as three things:
+It also turns an **animated GIF into a pure-CSS animation**: one static image
+plus `@keyframes` that cycle the palette — no JavaScript and no custom element.
+
+Ships as:
 
 - a **CLI** (`pixel-css image.png -o image.css`),
-- a **library** (`imageToCss(input, options)`),
+- a **library** (`imageToCss` / `animateImageToCss`),
 - a zero-dependency **Web Component** (`<pixel-image>`) with a palette control panel.
 
 ## How it works
@@ -57,7 +60,11 @@ pixel-css <input> [options]
   -o, --out <file>            Write CSS here (default: stdout)
       --meta <file>           Also write metadata JSON here
       --html <file>           Also write a demo HTML fragment here
-      --max-colors <n>        Quantize to at most n colors (default: keep all)
+      --animate               Treat input as animated (GIF/WebP): static image + @keyframes
+      --duration <s>          Animation loop duration in seconds (default: from GIF)
+      --resize <w>            Downscale to width w before converting (nearest)
+      --single-element        Paint on one element (no layer divs); 1 layer only
+      --max-colors <n>        Quantize to at most n colors (default: all; anim: 64)
       --dither <mode>         floyd-steinberg | atkinson (default: off)
       --alpha-threshold <n>   Alpha (0-255) below which a pixel is transparent (128)
       --alpha-mode <mode>     binary | keep (default: binary)
@@ -91,6 +98,37 @@ const { css, meta, html } = await imageToCss("sprite.png", {
 synchronous `convert(decodedImage, options)` directly (no `sharp` needed) — handy
 in tests or the browser.
 
+### Animation
+
+```ts
+import { animateImageToCss } from "pixel-css";
+
+const { css, meta } = await animateImageToCss("waterfall.gif", {
+  resize: 200,        // downscale — CSS grows with pixel count
+  maxColors: 48,
+  singleElement: true, // render on a single <div>, no child layers
+  sizing: "pixel",
+  scale: 3,
+});
+// meta.animation = { duration, frames, animatedSlots }
+```
+
+Drop the CSS in and add one element:
+
+```html
+<link rel="stylesheet" href="waterfall.css" />
+<div class="pixel-image palette"></div>
+```
+
+That's it — the waterfall loops forever, in pure CSS. See
+[`examples/waterfall`](examples/waterfall) (generated from a Monkey Island GIF).
+
+How it works: every pixel keeps a **fixed** palette slot for the whole loop —
+pixels never move. Only the *color values* of the slots change over time, driven
+by one `@keyframes` rule per animated slot (with `step-end` timing, so frames
+switch discretely like the source). Slots whose color never changes stay static,
+so a mostly-still scene animates only its moving parts (e.g. just the water).
+
 ### Options
 
 | Option | Default | Notes |
@@ -99,6 +137,9 @@ in tests or the browser.
 | `dither` | `false` | `floyd-steinberg` \| `atkinson`. Grows CSS a lot — off by default. |
 | `alphaThreshold` | `128` | Alpha below this → transparent. |
 | `alphaMode` | `"binary"` | `binary` (opaque or transparent) or `keep` (per-pixel `rgba`). |
+| `resize` | *(none)* | Downscale to this width before converting (nearest-neighbor). |
+| `singleElement` | `false` | Paint on the container itself; needs a single layer. |
+| `duration` | *(from GIF)* | Animation loop length in seconds (animation only). |
 | `scale` | `1` | Written into `--scale`; override per-element in CSS. |
 | `sizing` | `"container"` | `container` (crisp, fluid; needs a sized host), `percent` (widest support), `pixel` (integer px, seam-free, not fluid). |
 | `layerChunkSize` | `50` | Rows packed per background layer element. |
@@ -151,7 +192,17 @@ el.exportPalette(); // current palette as string[]
 ## Try the demo
 
 ```sh
-npm run demo   # builds, then serves examples/demo.html on http://localhost:5173
+npm run demo   # builds, then serves the examples on http://localhost:5173
+```
+
+- Widget + live palette panel: <http://localhost:5173/examples/demo.html>
+- Pure-CSS animated waterfall: <http://localhost:5173/examples/waterfall/>
+
+Regenerate the waterfall example yourself:
+
+```sh
+pixel-css monkey_island_waterfal.gif --animate --resize 200 --max-colors 48 \
+  --single-element --sizing pixel --scale 3 -o examples/waterfall/waterfall.css
 ```
 
 ## Notes & tradeoffs

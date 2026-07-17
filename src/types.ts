@@ -52,6 +52,20 @@ export interface Options {
   /** Prefix for palette custom properties. Default `color` → `--color-0`. */
   cssVarPrefix?: string;
 
+  /**
+   * Downscale the source to this width (preserving aspect ratio, nearest-neighbor)
+   * before converting. Recommended for large or animated images — the CSS grows
+   * with pixel count. Omit to keep the original resolution.
+   */
+  resize?: number;
+
+  /**
+   * Paint the whole image onto the container element itself instead of child
+   * layer `<div>`s. Only valid when the image fits in a single layer; lets you
+   * render with just one element and no custom component. Default false.
+   */
+  singleElement?: boolean;
+
   /** Class selector for the image container. Default `.pixel-image`. */
   selector?: string;
 
@@ -75,13 +89,20 @@ export interface Options {
 
   /** Strip insignificant whitespace from the emitted CSS. Default false. */
   minify?: boolean;
+
+  /**
+   * Animation only: total loop duration in seconds. Omit to derive it from the
+   * source frame delays.
+   */
+  duration?: number;
 }
 
 /** Fully-resolved options with every default applied. */
 export type ResolvedOptions = Required<
-  Omit<Options, "maxColors" | "emitHtml">
+  Omit<Options, "maxColors" | "emitHtml" | "resize" | "duration">
 > & {
   maxColors: number | undefined;
+  resize: number | undefined;
   emitHtml: boolean;
 };
 
@@ -107,6 +128,15 @@ export interface Meta {
   layerClass: string;
   /** Whether the palette contains a `transparent` slot. */
   hasAlpha: boolean;
+  /** Present only for animated conversions. */
+  animation?: {
+    /** Total loop duration in seconds. */
+    duration: number;
+    /** Number of source frames. */
+    frames: number;
+    /** How many palette slots animate (the rest are static). */
+    animatedSlots: number;
+  };
 }
 
 /** The return value of {@link imageToCss}. */
@@ -124,6 +154,16 @@ export interface DecodedImage {
   width: number;
   height: number;
   data: Uint8Array;
+}
+
+/** A decoded animation: a shared canvas size plus one RGBA buffer per frame. */
+export interface DecodedFrames {
+  width: number;
+  height: number;
+  /** One tightly-packed RGBA buffer per frame. */
+  frames: Uint8Array[];
+  /** Per-frame display duration in milliseconds. */
+  delays: number[];
 }
 
 /**

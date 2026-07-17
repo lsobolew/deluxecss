@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
-import { imageToCss } from "./index.js";
+import { animateImageToCss, imageToCss } from "./index.js";
 import type { Options } from "./types.js";
 
 const HELP = `pixel-css — convert an image into pure CSS pixel-art with a controllable palette
@@ -13,7 +13,12 @@ Options:
   -o, --out <file>            Write CSS here (default: stdout)
       --meta <file>           Also write metadata JSON here
       --html <file>           Also write a demo HTML fragment here
-      --max-colors <n>        Quantize to at most n colors (default: keep all)
+      --animate               Treat input as animated (GIF/WebP): emit a static
+                              image + @keyframes that cycle the palette (no JS)
+      --duration <s>          Animation loop duration in seconds (default: from GIF)
+      --resize <w>            Downscale to width w before converting (nearest)
+      --single-element        Paint on one element (no layer divs); 1 layer only
+      --max-colors <n>        Quantize to at most n colors (default: all; anim: 64)
       --dither <mode>         floyd-steinberg | atkinson (default: off)
       --alpha-threshold <n>   Alpha (0-255) below which a pixel is transparent (default: 128)
       --alpha-mode <mode>     binary | keep (default: binary)
@@ -38,6 +43,10 @@ async function main(): Promise<void> {
       out: { type: "string", short: "o" },
       meta: { type: "string" },
       html: { type: "string" },
+      animate: { type: "boolean" },
+      duration: { type: "string" },
+      resize: { type: "string" },
+      "single-element": { type: "boolean" },
       "max-colors": { type: "string" },
       dither: { type: "string" },
       "alpha-threshold": { type: "string" },
@@ -69,6 +78,9 @@ async function main(): Promise<void> {
     alphaThreshold: num(values["alpha-threshold"]),
     alphaMode: values["alpha-mode"] as Options["alphaMode"],
     scale: num(values.scale),
+    resize: num(values.resize),
+    singleElement: values["single-element"],
+    duration: num(values.duration),
     sizing: values.sizing as Options["sizing"],
     layerChunkSize: num(values.chunk),
     maxStopsPerLayer: num(values["max-stops"]),
@@ -83,12 +95,17 @@ async function main(): Promise<void> {
     minify: values.minify,
   };
 
-  const { css, meta, html } = await imageToCss(input, options);
+  const { css, meta, html } = values.animate
+    ? await animateImageToCss(input, options)
+    : await imageToCss(input, options);
 
   if (values.out) {
     await writeFile(values.out, css, "utf8");
+    const anim = meta.animation
+      ? `, ${meta.animation.frames} frames → ${meta.animation.animatedSlots} animated slots @ ${meta.animation.duration}s`
+      : "";
     process.stderr.write(
-      `Wrote ${values.out} (${meta.width}x${meta.height}, ${meta.colors.length} colors, ${meta.layerCount} layers)\n`,
+      `Wrote ${values.out} (${meta.width}x${meta.height}, ${meta.colors.length} colors, ${meta.layerCount} layers${anim})\n`,
     );
   } else {
     process.stdout.write(css);
