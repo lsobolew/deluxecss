@@ -64,4 +64,13 @@ describe("convert (full pipeline)", () => {
     expect(css).not.toContain("\n");
     expect(css).toContain("--color-0:#ff0000");
   });
+
+  it("backgroundInKeyframes delivers a static image via a held keyframe", () => {
+    const { css } = convert(checker, { backgroundInKeyframes: true });
+    const head = css.split("@keyframes")[0]!;
+    expect(head).not.toContain("background-image:"); // not static on element
+    expect(css).toContain("@keyframes pxc-bg");
+    expect(css).toContain("animation: pxc-bg");
+    expect(css).toContain("will-change: background-image;");
+  });
 });

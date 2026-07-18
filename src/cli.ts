@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 import { writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
-import { animateImageToCss, imageToCss } from "./index.js";
+import {
+  animateImageToCss,
+  convertAnimated,
+  decodeFilesToFrames,
+  imageToCss,
+} from "./index.js";
 import type { Options } from "./types.js";
 
 const HELP = `pixel-css — convert an image into pure CSS pixel-art with a controllable palette
@@ -23,6 +28,8 @@ Options:
                                   promoted; larger CSS)
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --no-will-change        Omit the will-change hint (frames mode)
+      --bg-in-keyframes       Deliver background-image via a held @keyframes rule
+                              (compositing-layer promotion; implies single-element)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
@@ -55,6 +62,7 @@ async function main(): Promise<void> {
       "anim-mode": { type: "string" },
       "max-frames": { type: "string" },
       "no-will-change": { type: "boolean" },
+      "bg-in-keyframes": { type: "boolean" },
       duration: { type: "string" },
       resize: { type: "string" },
       "single-element": { type: "boolean" },
@@ -95,6 +103,7 @@ async function main(): Promise<void> {
     animationMode: values["anim-mode"] as Options["animationMode"],
     maxFrames: num(values["max-frames"]),
     willChange: values["no-will-change"] ? false : undefined,
+    backgroundInKeyframes: values["bg-in-keyframes"],
     sizing: values.sizing as Options["sizing"],
     layerChunkSize: num(values.chunk),
     maxStopsPerLayer: num(values["max-stops"]),
@@ -109,9 +118,24 @@ async function main(): Promise<void> {
     minify: values.minify,
   };
 
-  const { css, meta, html } = values.animate
-    ? await animateImageToCss(input, options)
-    : await imageToCss(input, options);
+  let result;
+  if (values.animate && positionals.length > 1) {
+    // Multiple inputs = a frame sequence (e.g. sprite1.png sprite2.png …).
+    const perFrameMs = options.duration
+      ? (options.duration * 1000) / positionals.length
+      : 100;
+    const frames = await decodeFilesToFrames(
+      positionals,
+      options.resize,
+      perFrameMs,
+    );
+    result = convertAnimated(frames, options);
+  } else if (values.animate) {
+    result = await animateImageToCss(input, options);
+  } else {
+    result = await imageToCss(input, options);
+  }
+  const { css, meta, html } = result;
 
   if (values.out) {
     await writeFile(values.out, css, "utf8");

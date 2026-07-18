@@ -66,3 +66,33 @@ export async function decodeFrames(
 
   return { width, height, frames, delays };
 }
+
+/**
+ * Decode several still images as the frames of one animation (e.g. a numbered
+ * sprite sequence). All frames must share the same dimensions after optional
+ * `resize`. Delays default to `frameDelayMs` each (100ms unless overridden).
+ */
+export async function decodeFilesToFrames(
+  paths: string[],
+  resize?: number,
+  frameDelayMs = 100,
+): Promise<DecodedFrames> {
+  if (paths.length === 0) throw new Error("No frame files provided");
+  const decoded = await Promise.all(paths.map((p) => decode(p, resize)));
+  const { width, height } = decoded[0]!;
+  for (let i = 1; i < decoded.length; i++) {
+    const d = decoded[i]!;
+    if (d.width !== width || d.height !== height) {
+      throw new Error(
+        `Frame ${i} (${paths[i]}) is ${d.width}x${d.height}, expected ${width}x${height}. ` +
+          `All frames must share dimensions — use --resize to normalize widths.`,
+      );
+    }
+  }
+  return {
+    width,
+    height,
+    frames: decoded.map((d) => d.data),
+    delays: decoded.map(() => frameDelayMs),
+  };
+}

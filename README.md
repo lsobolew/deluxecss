@@ -64,6 +64,8 @@ pixel-css <input> [options]
       --anim-mode <mode>      palette | frames (default: palette)
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --no-will-change        Omit the will-change hint (frames mode)
+      --bg-in-keyframes       Deliver background-image via a held @keyframes rule
+                              (compositing-layer promotion; implies single-element)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
@@ -156,7 +158,40 @@ pixel-css waterfall.gif --animate --anim-mode frames \
 In both modes the palette stays controllable: colors are `--color-*` variables,
 so you can still recolor the whole animation by overriding them. See
 [`examples/waterfall`](examples/waterfall) (palette mode) and
-[`examples/waterfall-frames`](examples/waterfall-frames) (frames mode).
+[`examples/waterfall-frames`](examples/waterfall-frames) (frames mode, original
+resolution).
+
+Large images render fine in `frames` mode: the rows are spread across several
+stacked `<div>` layers (each with its own synchronized `@keyframes`), so no
+single element carries the whole background — that's what lets a full-resolution
+frame animation paint where a single-element one would go blank.
+
+#### Delivering the background from a keyframe (`backgroundInKeyframes`)
+
+You can also hand the `background-image` to the browser through a **held
+`@keyframes`** rule (`0%,100%`) instead of setting it statically on the element:
+
+```sh
+pixel-css scene.gif --animate --bg-in-keyframes --single-element -o scene.css
+```
+
+Because the background is now animation-driven, the browser gives the element its
+own compositing layer (reinforced by `will-change`), even for a still image. It
+composes with palette animation — the background layout is *held* while the
+`--color-*` values cycle — so you get the layer-promotion benefit and a live
+palette at once. (`examples/waterfall` uses this.)
+
+#### Building an animation from separate frame files
+
+Pass several images as a frame sequence (they must share dimensions):
+
+```sh
+pixel-css frame1.png frame2.png frame3.png frame4.png \
+  --animate --anim-mode frames --duration 0.6 --scale 6 -o sprite.css
+```
+
+See [`examples/guybrush`](examples/guybrush) — a 4-frame sprite animation built
+this way.
 
 ### Options
 
@@ -172,6 +207,7 @@ so you can still recolor the whole animation by overriding them. See
 | `animationMode` | `"palette"` | `palette` (cycle `--color-*`) or `frames` (swap `background-image`). |
 | `maxFrames` | *(all)* | Sample the animation down to at most N frames (evenly). |
 | `willChange` | `true` | Emit `will-change` layer-promotion hint (frames mode). |
+| `backgroundInKeyframes` | `false` | Deliver `background-image` via a held `@keyframes` for compositing-layer promotion (implies `singleElement`). |
 | `scale` | `1` | Written into `--scale`; override per-element in CSS. |
 | `sizing` | `"container"` | `container` (crisp, fluid; needs a sized host), `percent` (widest support), `pixel` (integer px, seam-free, not fluid). |
 | `layerChunkSize` | `50` | Rows packed per background layer element. |
@@ -228,8 +264,9 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
 ```
 
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
-- Animated waterfall, palette mode: <http://localhost:5173/examples/waterfall/>
-- Animated waterfall, frames mode: <http://localhost:5173/examples/waterfall-frames/>
+- Animated waterfall, palette mode (+ background-in-keyframes): <http://localhost:5173/examples/waterfall/>
+- Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
+- 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
 
 Regenerate the waterfall example yourself:
 

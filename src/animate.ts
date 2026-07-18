@@ -89,10 +89,15 @@ export function convertAnimated(
   const indexed: IndexedImage = { width, height, colors, indices, hasAlpha };
 
   const rows = buildRowGradients(indexed, opts.cssVarPrefix);
-  const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
-  const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
+  const single = opts.singleElement || opts.backgroundInKeyframes;
+  const chunk = single ? Infinity : opts.layerChunkSize;
+  const stopBudget = single ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
-  const { css: baseCss, layerClass } = buildCss(indexed, layers, opts);
+  const { css: baseCss, layerClass, baseBackground } = buildCss(
+    indexed,
+    layers,
+    opts,
+  );
   const meta = buildMeta(indexed, layers, opts, layerClass);
 
   // 5. Animation: keyframes + an animation list for the tracks that change.
@@ -101,6 +106,15 @@ export function convertAnimated(
 
   const keyframeBlocks: string[] = [];
   const animationNames: string[] = [];
+
+  // Folder-9 technique: hold the background-image in its own animation so the
+  // element is composited on its own layer while the palette cycles.
+  if (baseBackground) {
+    animationNames.push("pxc-bg");
+    keyframeBlocks.push(
+      `@keyframes pxc-bg {\n  0%, 100% {\n    background-image: ${baseBackground.image};\n    background-position: ${baseBackground.position};\n  }\n}`,
+    );
+  }
 
   trackSequences.forEach((seq, track) => {
     if (isConstant(seq)) return;
@@ -111,13 +125,18 @@ export function convertAnimated(
     );
   });
 
+  const willChange =
+    baseBackground && opts.willChange
+      ? `\n  will-change: background-image;`
+      : "";
+
   let css = baseCss;
   if (animationNames.length > 0) {
     const list = animationNames
       .map((n) => `${n} var(--pixel-anim-duration, ${duration}s) step-end infinite`)
       .join(", ");
     css +=
-      `\n${opts.selector} {\n  animation: ${list};\n}\n\n` +
+      `\n${opts.selector} {\n  animation: ${list};${willChange}\n}\n\n` +
       keyframeBlocks.join("\n\n") +
       "\n";
   }
@@ -157,81 +176,109 @@ function convertFrameSwap(
   const palette = buildGlobalPalette(frames, width, height, maxColors);
   const colors = palette.map((rgb) => formatColor(rgb, opts.colorFormat));
 
-  // 2. Each frame → its full single-layer gradient set (all rows, one element).
+  // 2. Reserve a transparent slot up front if any frame needs one, so the color
+  //    list (and thus every frame's indices) is consistent.
   const cache = new Map<number, number>();
+  const tokenFrames = frames.map((frame) =>
+    tokenizeFrame(frame, palette, opts.alphaThreshold, cache),
+  );
   let transparentIndex = -1;
-  let hasAlpha = false;
+  const hasAlpha = tokenFrames.some((t) => t.includes(TRANSPARENT_TOKEN));
+  if (hasAlpha) {
+    transparentIndex = colors.length;
+    colors.push("transparent");
+  }
 
-  const frameLayers = frames.map((frame) => {
-    const tokens = tokenizeFrame(frame, palette, opts.alphaThreshold, cache);
-    const indices = new Int32Array(width * height);
+  const toIndices = (tokens: Int32Array): Int32Array => {
+    const indices = new Int32Array(tokens.length);
     for (let p = 0; p < tokens.length; p++) {
       const t = tokens[p]!;
-      if (t === TRANSPARENT_TOKEN) {
-        hasAlpha = true;
-        if (transparentIndex === -1) {
-          transparentIndex = colors.length;
-          colors.push("transparent");
-        }
-        indices[p] = transparentIndex;
-      } else {
-        indices[p] = t;
-      }
+      indices[p] = t === TRANSPARENT_TOKEN ? transparentIndex : t;
     }
-    const indexed: IndexedImage = { width, height, colors, indices, hasAlpha };
+    return indices;
+  };
+
+  // 3. Build every frame's layers with a FIXED row-chunking, so layer i covers
+  //    the same rows in every frame (keeping the stacked layers aligned). Large
+  //    images spread across several `<div>` layers — each stays simple enough to
+  //    paint, which single-element painting cannot do at high resolution.
+  const chunkRows = opts.singleElement ? Infinity : opts.layerChunkSize;
+  const perFrameLayers = tokenFrames.map((tokens) => {
+    const indexed: IndexedImage = {
+      width,
+      height,
+      colors,
+      indices: toIndices(tokens),
+      hasAlpha,
+    };
     const rows = buildRowGradients(indexed, opts.cssVarPrefix);
-    // Force everything onto one layer — frame-swap paints on a single element.
-    return packLayers(rows, Infinity, Infinity)[0]!;
+    return packLayers(rows, chunkRows, Infinity); // fixed N-row chunks
   });
 
-  // 3. Static base render = frame 0, painted on the element itself.
-  const baseOpts = resolveOptions({ ...options, singleElement: true });
-  const frame0Indices = new Int32Array(width * height);
-  // Reuse frame 0's layout by rebuilding its indices for the meta/base image.
-  {
-    const tokens = tokenizeFrame(frames[0]!, palette, opts.alphaThreshold, cache);
-    for (let p = 0; p < tokens.length; p++) {
-      const t = tokens[p]!;
-      frame0Indices[p] = t === TRANSPARENT_TOKEN ? transparentIndex : t;
-    }
-  }
+  const layerCount = perFrameLayers[0]!.length;
+
+  // 4. Static base render = frame 0 (also the reduced-motion fallback).
   const baseImage: IndexedImage = {
     width,
     height,
     colors,
-    indices: frame0Indices,
+    indices: toIndices(tokenFrames[0]!),
     hasAlpha,
   };
   const { css: baseCss, layerClass } = buildCss(
     baseImage,
-    [frameLayers[0]!],
-    baseOpts,
+    perFrameLayers[0]!,
+    opts,
   );
-  const meta = buildMeta(baseImage, [frameLayers[0]!], baseOpts, layerClass);
+  const meta = buildMeta(baseImage, perFrameLayers[0]!, opts, layerClass);
 
-  // 4. Keyframes swapping the whole background-image per frame (step-end).
+  // 5. Per-frame keyframes swapping background-image (step-end, no tween).
   const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
   const duration = options.duration ?? totalDelay / 1000;
-  const name = "pxc-frames";
-
-  const stops: string[] = [];
-  let elapsed = 0;
-  for (let f = 0; f < frameLayers.length; f++) {
-    const pct = f === 0 ? 0 : round((elapsed / totalDelay) * 100);
-    stops.push(`  ${pct}% { background-image: ${frameLayers[f]!.backgroundImage}; }`);
-    elapsed += delays[f] ?? 0;
-  }
-
   const willChange = opts.willChange
     ? `\n  will-change: background-image;`
     : "";
-  let css = baseCss;
-  css +=
-    `\n${opts.selector} {` +
-    `\n  animation: ${name} var(--pixel-anim-duration, ${duration}s) step-end infinite;` +
-    willChange +
-    `\n}\n\n` +
-    `@keyframes ${name} {\n${stops.join("\n")}\n}\n`;
+  const dur = `var(--pixel-anim-duration, ${duration}s)`;
+
+  const framePct: number[] = [];
+  {
+    let elapsed = 0;
+    for (let f = 0; f < frames.length; f++) {
+      framePct.push(f === 0 ? 0 : round((elapsed / totalDelay) * 100));
+      elapsed += delays[f] ?? 0;
+    }
+  }
+
+  const keyframesFor = (name: string, bgFor: (f: number) => string): string => {
+    const stops = framePct
+      .map((pct, f) => `  ${pct}% { background-image: ${bgFor(f)}; }`)
+      .join("\n");
+    return `@keyframes ${name} {\n${stops}\n}`;
+  };
+
+  let css = baseCss + "\n";
+
+  if (opts.singleElement) {
+    const name = "pxc-frames";
+    css +=
+      `\n${opts.selector} {` +
+      `\n  animation: ${name} ${dur} step-end infinite;` +
+      willChange +
+      `\n}\n\n` +
+      keyframesFor(name, (f) => perFrameLayers[f]![0]!.backgroundImage) +
+      "\n";
+  } else {
+    for (let i = 0; i < layerCount; i++) {
+      const name = `pxc-frames-${i}`;
+      css +=
+        `\n${opts.selector} > .${layerClass}:nth-child(${i + 1}) {` +
+        `\n  animation: ${name} ${dur} step-end infinite;` +
+        willChange +
+        `\n}\n\n` +
+        keyframesFor(name, (f) => perFrameLayers[f]![i]!.backgroundImage) +
+        "\n";
+    }
+  }
 
   meta.animation = {
     mode: "frames",
@@ -241,7 +288,12 @@ function convertFrameSwap(
 
   const result: ConvertResult = { css, meta };
   if (opts.emitHtml) {
-    result.html = buildHtml(meta.selector, layerClass, 1, true);
+    result.html = buildHtml(
+      meta.selector,
+      layerClass,
+      layerCount,
+      opts.singleElement,
+    );
   }
   return result;
 }

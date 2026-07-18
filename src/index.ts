@@ -15,7 +15,7 @@ export type {
   Meta,
   Options,
 } from "./types.js";
-export { decode, decodeFrames } from "./decode.js";
+export { decode, decodeFrames, decodeFilesToFrames } from "./decode.js";
 export { resolveOptions } from "./options.js";
 export { convertAnimated, animateImageToCss } from "./animate.js";
 
@@ -37,8 +37,27 @@ export function convert(
   const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
   const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
-  const { css, layerClass } = buildCss(indexed, layers, opts);
+  const { css: baseCss, layerClass, baseBackground } = buildCss(
+    indexed,
+    layers,
+    opts,
+  );
   const meta = buildMeta(indexed, layers, opts, layerClass);
+
+  let css = baseCss;
+  if (baseBackground) {
+    // Folder-9 technique: deliver the static background through a held @keyframes
+    // so the element is promoted to its own compositing layer.
+    const willChange = opts.willChange
+      ? `\n  will-change: background-image;`
+      : "";
+    css +=
+      `\n${opts.selector} {` +
+      `\n  animation: pxc-bg 1s step-end infinite;` +
+      willChange +
+      `\n}\n\n` +
+      `@keyframes pxc-bg {\n  0%, 100% {\n    background-image: ${baseBackground.image};\n    background-position: ${baseBackground.position};\n  }\n}\n`;
+  }
 
   const result: ConvertResult = { css, meta };
   if (opts.emitHtml) {

@@ -23,6 +23,7 @@ export const DEFAULTS: ResolvedOptions = {
   animationMode: "palette",
   maxFrames: undefined,
   willChange: true,
+  backgroundInKeyframes: false,
 };
 
 export function resolveOptions(options: Options = {}): ResolvedOptions {

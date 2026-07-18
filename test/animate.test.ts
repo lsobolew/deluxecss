@@ -126,5 +126,53 @@ describe("convertAnimated", () => {
       expect(meta.animation?.frames).toBe(2);
       expect(meta.animation?.duration).toBeCloseTo(0.4);
     });
+
+    it("spreads tall images across multiple layers, one keyframes each", () => {
+      // 4 rows tall, chunk 2 → 2 layers; two frames.
+      const f0 = [[RED], [RED], [BLUE], [BLUE]].flat().map((c) => c);
+      const rowsA = [[RED], [BLUE], [RED], [BLUE]];
+      const rowsB = [[BLUE], [RED], [BLUE], [RED]];
+      const anim: DecodedFrames = {
+        width: 1,
+        height: 4,
+        frames: [
+          Uint8Array.from(rowsA.flat().flat()),
+          Uint8Array.from(rowsB.flat().flat()),
+        ],
+        delays: [100, 100],
+      };
+      void f0;
+      const { css, meta } = convertAnimated(anim, {
+        animationMode: "frames",
+        layerChunkSize: 2,
+      });
+      expect(meta.layerCount).toBe(2);
+      // one keyframes rule per layer
+      expect((css.match(/@keyframes pxc-frames-\d+/g) ?? []).length).toBe(2);
+      expect(css).toContain(":nth-child(1)");
+      expect(css).toContain(":nth-child(2)");
+    });
+  });
+
+  describe("backgroundInKeyframes (folder-9 technique)", () => {
+    it("delivers background-image via a held keyframe, not statically", () => {
+      const anim = frames(
+        [
+          [RED, BLUE],
+          [BLUE, RED],
+        ],
+        2,
+        1,
+      );
+      const { css } = convertAnimated(anim, { backgroundInKeyframes: true });
+      // no static background-image before the first @keyframes block
+      const head = css.split("@keyframes")[0]!;
+      expect(head).not.toContain("background-image:");
+      // a held bg keyframe + layer promotion, plus palette still cycles
+      expect(css).toContain("@keyframes pxc-bg");
+      expect(css).toContain("0%, 100%");
+      expect(css).toContain("will-change: background-image;");
+      expect(css).toMatch(/animation:\s*pxc-bg[^;]*pxc-\d+/);
+    });
   });
 });

@@ -287,8 +287,9 @@
   "layerClass": "pixel-image__layer",
   "hasAlpha": false,
   "animation": {
+    "mode": "palette",
     "duration": 1.5,
     "frames": 50,
-    "animatedSlots": 228
+    "animatedSlots": 229
   }
 }

@@ -4,6 +4,11 @@ import type { IndexedImage, ResolvedOptions } from "./types.js";
 export interface CssParts {
   css: string;
   layerClass: string;
+  /**
+   * Present when `backgroundInKeyframes` is set: the background the caller should
+   * emit inside a held `@keyframes` rule instead of statically on the element.
+   */
+  baseBackground?: { image: string; position: string };
 }
 
 /** Assemble the final stylesheet from the palette and packed layers. */
@@ -31,7 +36,7 @@ export function buildCss(
     );
   }
 
-  const single = opts.singleElement;
+  const single = opts.singleElement || opts.backgroundInKeyframes;
   if (single && layers.length > 1) {
     throw new Error(
       `singleElement requires the image to fit in one layer, but it needs ${layers.length}. ` +
@@ -41,6 +46,7 @@ export function buildCss(
 
   const baseClass = selector.startsWith(".") ? selector.slice(1) : selector;
   const layerClass = `${baseClass}__layer`;
+  const bgInKeyframes = opts.backgroundInKeyframes && layers.length === 1;
 
   const blocks: string[] = [];
 
@@ -61,13 +67,26 @@ export function buildCss(
 
   // Container / sizing (+ background painted directly on it in single-element mode).
   let containerBody = sizingDecls(width, height, sizing, scale);
+  let baseBackground: CssParts["baseBackground"];
   if (single && layers.length === 1) {
     const layer = layers[0]!;
-    containerBody +=
-      `\n  background-repeat: no-repeat;` +
-      `\n  background-size: 100% var(--pixel-height);` +
-      `\n  background-image: ${layer.backgroundImage};` +
-      `\n  background-position: ${layer.backgroundPosition};`;
+    if (bgInKeyframes) {
+      // Background is delivered by the caller via a held @keyframes rule; the
+      // element only sets the size/repeat so the animated image lands correctly.
+      containerBody +=
+        `\n  background-repeat: no-repeat;` +
+        `\n  background-size: 100% var(--pixel-height);`;
+      baseBackground = {
+        image: layer.backgroundImage,
+        position: layer.backgroundPosition,
+      };
+    } else {
+      containerBody +=
+        `\n  background-repeat: no-repeat;` +
+        `\n  background-size: 100% var(--pixel-height);` +
+        `\n  background-image: ${layer.backgroundImage};` +
+        `\n  background-position: ${layer.backgroundPosition};`;
+    }
   }
   blocks.push(`${selector} {\n${containerBody}\n}`);
 
@@ -114,7 +133,7 @@ export function buildCss(
   }
 
   const css = minify ? minifyCss(blocks.join("\n")) : blocks.join("\n\n") + "\n";
-  return { css, layerClass };
+  return { css, layerClass, baseBackground };
 }
 
 function sizingDecls(

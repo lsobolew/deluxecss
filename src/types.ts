@@ -120,6 +120,15 @@ export interface Options {
    * to promote the element to its own compositing layer. Default true.
    */
   willChange?: boolean;
+
+  /**
+   * Deliver the `background-image` from inside a held `@keyframes` rule
+   * (`0%,100%`) driven by an animation, instead of as a static property on the
+   * element. This promotes the element to its own compositing layer even for a
+   * still image, and composes with palette animation (the background layout is
+   * held while `--color-*` cycle). Implies `singleElement`. Default false.
+   */
+  backgroundInKeyframes?: boolean;
 }
 
 /** Fully-resolved options with every default applied. */
