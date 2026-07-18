@@ -200,7 +200,11 @@ pixel-css frame1.png frame2.png frame3.png frame4.png \
 ```
 
 See [`examples/guybrush`](examples/guybrush) — a 4-frame sprite animation built
-this way.
+this way — and [`examples/matrix`](examples/matrix), a live-action film clip (the
+first 5 seconds, 120 source frames sampled to 50 at 256px, played over 5s in
+`frames` mode). Frame-by-frame film is inherently heavy — even quantized to 20
+colors it is ~31 MB — so it's a stress test, not a recommended use; pixel art and
+low-color animation are where this shines.
 
 ### Options
 
@@ -282,6 +286,7 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
   - static base + animated overlay (only moving pixels repaint): <http://localhost:5173/examples/waterfall-overlay/>
 - Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
 - 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
+- Live-action film clip, frame-by-frame (Matrix, first 5s @ 256px): <http://localhost:5173/examples/matrix/>
 
 Regenerate the waterfall examples yourself:
 

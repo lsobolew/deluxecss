@@ -1,0 +1,38 @@
+{
+  "width": 256,
+  "height": 145,
+  "colors": [
+    "#877f60",
+    "#7c7456",
+    "#6e654a",
+    "#594d38",
+    "#443723",
+    "#2b2117",
+    "#878c75",
+    "#747c66",
+    "#706e54",
+    "#5d6353",
+    "#595b47",
+    "#434835",
+    "#2e3128",
+    "#a7b5a5",
+    "#99a48f",
+    "#626c5b",
+    "#161716",
+    "#b0c3bb",
+    "#dbeff2",
+    "#040204"
+  ],
+  "layerCount": 3,
+  "chunkSize": 50,
+  "scale": 1,
+  "cssVarPrefix": "color",
+  "selector": ".pixel-image",
+  "layerClass": "pixel-image__layer",
+  "hasAlpha": false,
+  "animation": {
+    "mode": "frames",
+    "duration": 5,
+    "frames": 50
+  }
+}
