@@ -20,6 +20,9 @@ export const DEFAULTS: ResolvedOptions = {
   emitHtml: false,
   emitAtProperty: false,
   minify: false,
+  animationMode: "palette",
+  maxFrames: undefined,
+  willChange: true,
 };
 
 export function resolveOptions(options: Options = {}): ResolvedOptions {

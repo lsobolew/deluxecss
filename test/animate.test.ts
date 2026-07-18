@@ -81,4 +81,50 @@ describe("convertAnimated", () => {
     expect(css).not.toContain("__layer:nth-child");
     expect(html).toBe('<div class="pixel-image palette"></div>');
   });
+
+  describe("frames mode (background-image swap)", () => {
+    it("swaps the whole background-image per frame via one @keyframes", () => {
+      const anim = frames(
+        [
+          [RED, BLUE],
+          [BLUE, RED],
+        ],
+        2,
+        1,
+      );
+      const { css, meta } = convertAnimated(anim, { animationMode: "frames" });
+      expect(meta.animation?.mode).toBe("frames");
+      expect(meta.animation?.frames).toBe(2);
+      // a single keyframes rule, driven with step-end
+      expect((css.match(/@keyframes/g) ?? []).length).toBe(1);
+      expect(css).toContain("step-end infinite");
+      // each stop swaps background-image
+      expect((css.match(/% \{ background-image:/g) ?? []).length).toBe(2);
+      // palette stays controllable (colors referenced by var, not literal)
+      expect(css).toMatch(/--color-0:/);
+      expect(css).toContain("var(--color-");
+    });
+
+    it("emits the will-change hint by default, and omits it when disabled", () => {
+      const anim = frames([[RED], [BLUE]], 1, 1);
+      expect(convertAnimated(anim, { animationMode: "frames" }).css).toContain(
+        "will-change: background-image;",
+      );
+      expect(
+        convertAnimated(anim, { animationMode: "frames", willChange: false })
+          .css,
+      ).not.toContain("will-change");
+    });
+
+    it("samples down to maxFrames while preserving loop duration", () => {
+      // 4 frames, 100ms each = 0.4s loop; sample to 2 frames.
+      const anim = frames([[RED], [BLUE], [RED], [BLUE]], 1, 1);
+      const { meta } = convertAnimated(anim, {
+        animationMode: "frames",
+        maxFrames: 2,
+      });
+      expect(meta.animation?.frames).toBe(2);
+      expect(meta.animation?.duration).toBeCloseTo(0.4);
+    });
+  });
 });

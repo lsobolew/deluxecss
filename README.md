@@ -60,7 +60,10 @@ pixel-css <input> [options]
   -o, --out <file>            Write CSS here (default: stdout)
       --meta <file>           Also write metadata JSON here
       --html <file>           Also write a demo HTML fragment here
-      --animate               Treat input as animated (GIF/WebP): static image + @keyframes
+      --animate               Treat input as animated (GIF/WebP): CSS keyframes, no JS
+      --anim-mode <mode>      palette | frames (default: palette)
+      --max-frames <n>        Sample down to at most n frames (evenly spaced)
+      --no-will-change        Omit the will-change hint (frames mode)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
@@ -123,11 +126,37 @@ Drop the CSS in and add one element:
 That's it — the waterfall loops forever, in pure CSS. See
 [`examples/waterfall`](examples/waterfall) (generated from a Monkey Island GIF).
 
-How it works: every pixel keeps a **fixed** palette slot for the whole loop —
-pixels never move. Only the *color values* of the slots change over time, driven
-by one `@keyframes` rule per animated slot (with `step-end` timing, so frames
-switch discretely like the source). Slots whose color never changes stay static,
-so a mostly-still scene animates only its moving parts (e.g. just the water).
+#### Two animation modes
+
+`animationMode` picks how the animation is expressed in CSS:
+
+- **`palette`** (default) — animate the `--color-*` custom properties. Every pixel
+  keeps a **fixed** palette slot; only the color *values* cycle, driven by one
+  `@keyframes` per changing slot (`step-end`, so frames switch discretely).
+  Slots that never change stay static, so a mostly-still scene animates only its
+  moving parts. Compact CSS. Best for color-cycling art (water, fire, neon) —
+  where pixels don't move. Continuously recomputes gradients on the CPU.
+
+- **`frames`** — swap the **whole `background-image`** per frame inside a single
+  `@keyframes` rule (`step-end`). Works for **any** animation, including moving
+  pixels. Because each frame's background is a fixed value, the browser
+  rasterizes it **once and caches** it, and `will-change: background-image`
+  promotes the element to its own compositing layer — so playback runs on the
+  browser's animation pipeline instead of re-rasterizing gradients every tick.
+  The tradeoff is size: the CSS holds every frame's full gradient set, so it is
+  much larger. Use `--resize` and `--max-frames` to keep it in check.
+
+```sh
+# frame-swap animation, sampled to 12 frames, scaled up
+pixel-css waterfall.gif --animate --anim-mode frames \
+  --resize 100 --max-frames 12 --max-colors 40 --sizing pixel --scale 5 \
+  -o waterfall.css
+```
+
+In both modes the palette stays controllable: colors are `--color-*` variables,
+so you can still recolor the whole animation by overriding them. See
+[`examples/waterfall`](examples/waterfall) (palette mode) and
+[`examples/waterfall-frames`](examples/waterfall-frames) (frames mode).
 
 ### Options
 
@@ -140,6 +169,9 @@ so a mostly-still scene animates only its moving parts (e.g. just the water).
 | `resize` | *(none)* | Downscale to this width before converting (nearest-neighbor). |
 | `singleElement` | `false` | Paint on the container itself; needs a single layer. |
 | `duration` | *(from GIF)* | Animation loop length in seconds (animation only). |
+| `animationMode` | `"palette"` | `palette` (cycle `--color-*`) or `frames` (swap `background-image`). |
+| `maxFrames` | *(all)* | Sample the animation down to at most N frames (evenly). |
+| `willChange` | `true` | Emit `will-change` layer-promotion hint (frames mode). |
 | `scale` | `1` | Written into `--scale`; override per-element in CSS. |
 | `sizing` | `"container"` | `container` (crisp, fluid; needs a sized host), `percent` (widest support), `pixel` (integer px, seam-free, not fluid). |
 | `layerChunkSize` | `50` | Rows packed per background layer element. |
@@ -196,7 +228,8 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
 ```
 
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
-- Pure-CSS animated waterfall: <http://localhost:5173/examples/waterfall/>
+- Animated waterfall, palette mode: <http://localhost:5173/examples/waterfall/>
+- Animated waterfall, frames mode: <http://localhost:5173/examples/waterfall-frames/>
 
 Regenerate the waterfall example yourself:
 

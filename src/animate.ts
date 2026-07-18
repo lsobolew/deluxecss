@@ -24,15 +24,21 @@ const TRANSPARENT_TOKEN = -1;
  * JavaScript, no custom element.
  */
 export function convertAnimated(
-  input: DecodedFrames,
+  rawInput: DecodedFrames,
   options: Options = {},
 ): ConvertResult {
-  const { width, height, frames, delays } = input;
-  if (frames.length === 0) throw new Error("No frames to convert");
-  if (width < 1 || height < 1) {
+  if (rawInput.frames.length === 0) throw new Error("No frames to convert");
+  if (rawInput.width < 1 || rawInput.height < 1) {
     throw new Error("Image must have non-zero width and height");
   }
 
+  const input = sampleFrames(rawInput, options.maxFrames);
+
+  if ((options.animationMode ?? "palette") === "frames") {
+    return convertFrameSwap(input, options);
+  }
+
+  const { width, height, frames, delays } = input;
   const opts = resolveOptions(options);
   const maxColors = options.maxColors ?? 64;
   const pixelCount = width * height;
@@ -117,6 +123,7 @@ export function convertAnimated(
   }
 
   meta.animation = {
+    mode: "palette",
     duration,
     frames: frames.length,
     animatedSlots: animationNames.length,
@@ -127,6 +134,140 @@ export function convertAnimated(
     result.html = buildHtml(meta.selector, layerClass, layers.length, opts.singleElement);
   }
   return result;
+}
+
+/**
+ * Frame-swap animation: each frame is a complete `background-image` gradient set,
+ * and a single `@keyframes` rule swaps the whole background per frame with
+ * `step-end` timing (no tween). Because every frame's background is a fixed value
+ * the browser rasterizes it once and caches it, and the element is promoted to
+ * its own compositing layer — so playback runs on the browser's animation
+ * pipeline instead of continuously recomputing gradients. Works for any
+ * animation (pixels may move), and the palette stays controllable via `--color-*`.
+ */
+function convertFrameSwap(
+  input: DecodedFrames,
+  options: Options,
+): ConvertResult {
+  const { width, height, frames, delays } = input;
+  const opts = resolveOptions(options);
+  const maxColors = options.maxColors ?? 64;
+
+  // 1. One shared, controllable palette across every frame.
+  const palette = buildGlobalPalette(frames, width, height, maxColors);
+  const colors = palette.map((rgb) => formatColor(rgb, opts.colorFormat));
+
+  // 2. Each frame → its full single-layer gradient set (all rows, one element).
+  const cache = new Map<number, number>();
+  let transparentIndex = -1;
+  let hasAlpha = false;
+
+  const frameLayers = frames.map((frame) => {
+    const tokens = tokenizeFrame(frame, palette, opts.alphaThreshold, cache);
+    const indices = new Int32Array(width * height);
+    for (let p = 0; p < tokens.length; p++) {
+      const t = tokens[p]!;
+      if (t === TRANSPARENT_TOKEN) {
+        hasAlpha = true;
+        if (transparentIndex === -1) {
+          transparentIndex = colors.length;
+          colors.push("transparent");
+        }
+        indices[p] = transparentIndex;
+      } else {
+        indices[p] = t;
+      }
+    }
+    const indexed: IndexedImage = { width, height, colors, indices, hasAlpha };
+    const rows = buildRowGradients(indexed, opts.cssVarPrefix);
+    // Force everything onto one layer — frame-swap paints on a single element.
+    return packLayers(rows, Infinity, Infinity)[0]!;
+  });
+
+  // 3. Static base render = frame 0, painted on the element itself.
+  const baseOpts = resolveOptions({ ...options, singleElement: true });
+  const frame0Indices = new Int32Array(width * height);
+  // Reuse frame 0's layout by rebuilding its indices for the meta/base image.
+  {
+    const tokens = tokenizeFrame(frames[0]!, palette, opts.alphaThreshold, cache);
+    for (let p = 0; p < tokens.length; p++) {
+      const t = tokens[p]!;
+      frame0Indices[p] = t === TRANSPARENT_TOKEN ? transparentIndex : t;
+    }
+  }
+  const baseImage: IndexedImage = {
+    width,
+    height,
+    colors,
+    indices: frame0Indices,
+    hasAlpha,
+  };
+  const { css: baseCss, layerClass } = buildCss(
+    baseImage,
+    [frameLayers[0]!],
+    baseOpts,
+  );
+  const meta = buildMeta(baseImage, [frameLayers[0]!], baseOpts, layerClass);
+
+  // 4. Keyframes swapping the whole background-image per frame (step-end).
+  const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
+  const duration = options.duration ?? totalDelay / 1000;
+  const name = "pxc-frames";
+
+  const stops: string[] = [];
+  let elapsed = 0;
+  for (let f = 0; f < frameLayers.length; f++) {
+    const pct = f === 0 ? 0 : round((elapsed / totalDelay) * 100);
+    stops.push(`  ${pct}% { background-image: ${frameLayers[f]!.backgroundImage}; }`);
+    elapsed += delays[f] ?? 0;
+  }
+
+  const willChange = opts.willChange
+    ? `\n  will-change: background-image;`
+    : "";
+  let css = baseCss;
+  css +=
+    `\n${opts.selector} {` +
+    `\n  animation: ${name} var(--pixel-anim-duration, ${duration}s) step-end infinite;` +
+    willChange +
+    `\n}\n\n` +
+    `@keyframes ${name} {\n${stops.join("\n")}\n}\n`;
+
+  meta.animation = {
+    mode: "frames",
+    duration,
+    frames: frames.length,
+  };
+
+  const result: ConvertResult = { css, meta };
+  if (opts.emitHtml) {
+    result.html = buildHtml(meta.selector, layerClass, 1, true);
+  }
+  return result;
+}
+
+/** Sample frames down to at most `max`, evenly spaced, preserving loop timing. */
+function sampleFrames(input: DecodedFrames, max?: number): DecodedFrames {
+  const total = input.frames.length;
+  if (!max || max >= total || max < 1) return input;
+
+  const frames: Uint8Array[] = [];
+  const delays: number[] = [];
+  // Pick `max` source indices evenly, then fold the skipped frames' delays
+  // into the kept frame so the overall loop duration is unchanged.
+  const picks: number[] = [];
+  for (let i = 0; i < max; i++) {
+    picks.push(Math.round((i * (total - 1)) / (max - 1)));
+  }
+  for (let i = 0; i < picks.length; i++) {
+    const start = picks[i]!;
+    const end = i + 1 < picks.length ? picks[i + 1]! : total;
+    frames.push(input.frames[start]!);
+    let d = 0;
+    for (let s = start; s < end; s++) d += input.delays[s] ?? 0;
+    delays.push(d);
+  }
+  return { width: input.width, height: input.height, frames, delays };
 }
 
 /** Decode an animated image from disk/memory and convert it to animated CSS. */

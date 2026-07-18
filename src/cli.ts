@@ -13,8 +13,16 @@ Options:
   -o, --out <file>            Write CSS here (default: stdout)
       --meta <file>           Also write metadata JSON here
       --html <file>           Also write a demo HTML fragment here
-      --animate               Treat input as animated (GIF/WebP): emit a static
-                              image + @keyframes that cycle the palette (no JS)
+      --animate               Treat input as animated (GIF/WebP): emit CSS
+                              keyframes that play it (no JS, no custom element)
+      --anim-mode <mode>      palette | frames (default: palette)
+                                palette: cycle --color-* vars (compact; art whose
+                                  pixels don't move — water/fire/neon)
+                                frames: swap whole background-image per frame
+                                  (any animation; per-frame raster cached, layer-
+                                  promoted; larger CSS)
+      --max-frames <n>        Sample down to at most n frames (evenly spaced)
+      --no-will-change        Omit the will-change hint (frames mode)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
@@ -44,6 +52,9 @@ async function main(): Promise<void> {
       meta: { type: "string" },
       html: { type: "string" },
       animate: { type: "boolean" },
+      "anim-mode": { type: "string" },
+      "max-frames": { type: "string" },
+      "no-will-change": { type: "boolean" },
       duration: { type: "string" },
       resize: { type: "string" },
       "single-element": { type: "boolean" },
@@ -81,6 +92,9 @@ async function main(): Promise<void> {
     resize: num(values.resize),
     singleElement: values["single-element"],
     duration: num(values.duration),
+    animationMode: values["anim-mode"] as Options["animationMode"],
+    maxFrames: num(values["max-frames"]),
+    willChange: values["no-will-change"] ? false : undefined,
     sizing: values.sizing as Options["sizing"],
     layerChunkSize: num(values.chunk),
     maxStopsPerLayer: num(values["max-stops"]),
@@ -102,7 +116,9 @@ async function main(): Promise<void> {
   if (values.out) {
     await writeFile(values.out, css, "utf8");
     const anim = meta.animation
-      ? `, ${meta.animation.frames} frames → ${meta.animation.animatedSlots} animated slots @ ${meta.animation.duration}s`
+      ? meta.animation.mode === "frames"
+        ? `, ${meta.animation.mode} mode: ${meta.animation.frames} frames @ ${meta.animation.duration}s`
+        : `, ${meta.animation.mode} mode: ${meta.animation.frames} frames → ${meta.animation.animatedSlots} animated slots @ ${meta.animation.duration}s`
       : "";
     process.stderr.write(
       `Wrote ${values.out} (${meta.width}x${meta.height}, ${meta.colors.length} colors, ${meta.layerCount} layers${anim})\n`,

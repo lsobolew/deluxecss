@@ -95,14 +95,43 @@ export interface Options {
    * source frame delays.
    */
   duration?: number;
+
+  /**
+   * Animation only: how the animation is expressed in CSS.
+   * - `palette` (default): animate the `--color-*` custom properties. The pixel
+   *   layout is fixed and only color *values* cycle — ideal for color-cycling
+   *   art (water, fire, neon). Compact, but recolors continuously on the CPU.
+   * - `frames`: swap the whole `background-image` per frame inside `@keyframes`.
+   *   Works for *any* animation (pixels may move), and because each frame is a
+   *   fixed background value the browser rasterizes it once and caches it — with
+   *   the element promoted to its own compositing layer (`will-change`), playback
+   *   is offloaded from the main paint path. Larger CSS.
+   */
+  animationMode?: "palette" | "frames";
+
+  /**
+   * Animation only: sample the source down to at most this many frames (evenly
+   * spaced). Useful for `frames` mode, where CSS size scales with frame count.
+   */
+  maxFrames?: number;
+
+  /**
+   * Animation only (`frames` mode): emit a `will-change: background-image` hint
+   * to promote the element to its own compositing layer. Default true.
+   */
+  willChange?: boolean;
 }
 
 /** Fully-resolved options with every default applied. */
 export type ResolvedOptions = Required<
-  Omit<Options, "maxColors" | "emitHtml" | "resize" | "duration">
+  Omit<
+    Options,
+    "maxColors" | "emitHtml" | "resize" | "duration" | "maxFrames"
+  >
 > & {
   maxColors: number | undefined;
   resize: number | undefined;
+  maxFrames: number | undefined;
   emitHtml: boolean;
 };
 
@@ -130,12 +159,14 @@ export interface Meta {
   hasAlpha: boolean;
   /** Present only for animated conversions. */
   animation?: {
+    /** Which CSS strategy was used. */
+    mode: "palette" | "frames";
     /** Total loop duration in seconds. */
     duration: number;
-    /** Number of source frames. */
+    /** Number of frames emitted (after any `maxFrames` sampling). */
     frames: number;
-    /** How many palette slots animate (the rest are static). */
-    animatedSlots: number;
+    /** `palette` mode: how many palette slots animate (the rest are static). */
+    animatedSlots?: number;
   };
 }
 
