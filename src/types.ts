@@ -106,8 +106,12 @@ export interface Options {
    *   fixed background value the browser rasterizes it once and caches it — with
    *   the element promoted to its own compositing layer (`will-change`), playback
    *   is offloaded from the main paint path. Larger CSS.
+   * - `overlay`: paint the pixels that never change once as a static background,
+   *   and animate only a mostly-transparent overlay layer that defines just the
+   *   changing pixels (frame-swapped). The browser only repaints the small moving
+   *   region each frame.
    */
-  animationMode?: "palette" | "frames";
+  animationMode?: "palette" | "frames" | "overlay";
 
   /**
    * Animation only: sample the source down to at most this many frames (evenly
@@ -178,7 +182,7 @@ export interface Meta {
   /** Present only for animated conversions. */
   animation?: {
     /** Which CSS strategy was used. */
-    mode: "palette" | "frames";
+    mode: "palette" | "frames" | "overlay";
     /** Total loop duration in seconds. */
     duration: number;
     /** Number of frames emitted (after any `maxFrames` sampling). */

@@ -148,6 +148,13 @@ That's it — the waterfall loops forever, in pure CSS. See
   The tradeoff is size: the CSS holds every frame's full gradient set, so it is
   much larger. Use `--resize` and `--max-frames` to keep it in check.
 
+- **`overlay`** — paint the pixels that never change **once** as a static
+  background on the element, then animate only a separate, mostly-transparent
+  overlay layer that defines just the changing pixels (frame-swapped). Every
+  frame the browser repaints only the small moving region; the static base is
+  rasterized once. Best when a small part of the scene moves over a still
+  background (a waterfall, a flickering light). See `examples/waterfall-overlay`.
+
 ```sh
 # frame-swap animation, sampled to 12 frames, scaled up
 pixel-css waterfall.gif --animate --anim-mode frames \
@@ -206,7 +213,7 @@ this way.
 | `resize` | *(none)* | Downscale to this width before converting (nearest-neighbor). |
 | `singleElement` | `false` | Paint on the container itself; needs a single layer. |
 | `duration` | *(from GIF)* | Animation loop length in seconds (animation only). |
-| `animationMode` | `"palette"` | `palette` (cycle `--color-*`) or `frames` (swap `background-image`). |
+| `animationMode` | `"palette"` | `palette` (cycle `--color-*`), `frames` (swap whole `background-image`), or `overlay` (static base + mostly-transparent animated overlay). |
 | `maxFrames` | *(all)* | Sample the animation down to at most N frames (evenly). |
 | `willChange` | `true` | Emit `will-change` layer-promotion hint (frames mode). |
 | `backgroundInKeyframes` | `false` | Deliver `background-image` via a held `@keyframes` for compositing-layer promotion (single element, or per `<div>` layer). |
@@ -268,10 +275,11 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
 
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
 - Animated waterfall, palette mode, original 640×286 (28 layers): <http://localhost:5173/examples/waterfall/>
-- Single layer (256×114), three variants to compare playback:
+- Single layer (256×114), variants to compare playback:
   - background-image on the element: <http://localhost:5173/examples/waterfall-1layer-static-bg/>
   - background-image in a held `@keyframes` (+ `will-change`): <http://localhost:5173/examples/waterfall-1layer/>
   - held keyframe + static colors inlined as literals: <http://localhost:5173/examples/waterfall-1layer-inline/>
+  - static base + animated overlay (only moving pixels repaint): <http://localhost:5173/examples/waterfall-overlay/>
 - Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
 - 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
 

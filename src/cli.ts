@@ -20,12 +20,14 @@ Options:
       --html <file>           Also write a demo HTML fragment here
       --animate               Treat input as animated (GIF/WebP): emit CSS
                               keyframes that play it (no JS, no custom element)
-      --anim-mode <mode>      palette | frames (default: palette)
+      --anim-mode <mode>      palette | frames | overlay (default: palette)
                                 palette: cycle --color-* vars (compact; art whose
                                   pixels don't move — water/fire/neon)
                                 frames: swap whole background-image per frame
                                   (any animation; per-frame raster cached, layer-
                                   promoted; larger CSS)
+                                overlay: static base + a mostly-transparent
+                                  overlay that animates only the changing pixels
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --no-will-change        Omit the will-change hint (frames mode)
       --bg-in-keyframes       Deliver background-image via a held @keyframes rule
@@ -144,9 +146,9 @@ async function main(): Promise<void> {
   if (values.out) {
     await writeFile(values.out, css, "utf8");
     const anim = meta.animation
-      ? meta.animation.mode === "frames"
-        ? `, ${meta.animation.mode} mode: ${meta.animation.frames} frames @ ${meta.animation.duration}s`
-        : `, ${meta.animation.mode} mode: ${meta.animation.frames} frames → ${meta.animation.animatedSlots} animated slots @ ${meta.animation.duration}s`
+      ? meta.animation.animatedSlots !== undefined
+        ? `, ${meta.animation.mode} mode: ${meta.animation.frames} frames → ${meta.animation.animatedSlots} animated slots @ ${meta.animation.duration}s`
+        : `, ${meta.animation.mode} mode: ${meta.animation.frames} frames @ ${meta.animation.duration}s`
       : "";
     process.stderr.write(
       `Wrote ${values.out} (${meta.width}x${meta.height}, ${meta.colors.length} colors, ${meta.layerCount} layers${anim})\n`,

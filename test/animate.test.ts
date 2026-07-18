@@ -154,6 +154,33 @@ describe("convertAnimated", () => {
     });
   });
 
+  describe("overlay mode (static base + animated overlay)", () => {
+    it("cuts changing pixels from the base and animates them in an overlay", () => {
+      // pixel 0 constant RED (→ base), pixel 1 GREEN→BLUE (→ overlay).
+      const GREEN = [0, 255, 0, 255];
+      const anim = frames(
+        [
+          [RED, GREEN],
+          [RED, BLUE],
+        ],
+        2,
+        1,
+      );
+      const { css, meta } = convertAnimated(anim, { animationMode: "overlay" });
+      expect(meta.animation?.mode).toBe("overlay");
+      // static base painted on the element, with a transparent cut-out slot
+      const head = css.split("@keyframes")[0]!;
+      expect(head).toContain("background-image:");
+      expect(css).toContain("transparent");
+      // one overlay layer, frame-swapped
+      expect(css).toContain("@keyframes pxc-overlay");
+      expect(css).toMatch(/animation: pxc-overlay/);
+      expect((css.match(/% \{ background-image:/g) ?? []).length).toBe(2);
+      // overlay has a static frame-0 background too (reduced-motion fallback)
+      expect(css).toMatch(/__layer \{[\s\S]*background-image:/);
+    });
+  });
+
   describe("backgroundInKeyframes (folder-9 technique)", () => {
     it("single element: shares one animation list with the palette tracks", () => {
       const anim = frames(

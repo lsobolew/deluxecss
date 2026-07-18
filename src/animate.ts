@@ -34,9 +34,9 @@ export function convertAnimated(
 
   const input = sampleFrames(rawInput, options.maxFrames);
 
-  if ((options.animationMode ?? "palette") === "frames") {
-    return convertFrameSwap(input, options);
-  }
+  const mode = options.animationMode ?? "palette";
+  if (mode === "frames") return convertFrameSwap(input, options);
+  if (mode === "overlay") return convertOverlay(input, options);
 
   const { width, height, frames, delays } = input;
   const opts = resolveOptions(options);
@@ -315,6 +315,141 @@ function convertFrameSwap(
       layerCount,
       opts.singleElement,
     );
+  }
+  return result;
+}
+
+/**
+ * Overlay animation: paint the pixels that never change once as a static
+ * background on the element, then animate only a mostly-transparent overlay
+ * layer whose gradients define just the changing pixels (frame-swapped). Every
+ * frame the browser repaints only the small moving region; the static base is
+ * rasterized once. The palette stays controllable via `--color-*`.
+ */
+function convertOverlay(
+  input: DecodedFrames,
+  options: Options,
+): ConvertResult {
+  const { width, height, frames, delays } = input;
+  const opts = resolveOptions(options);
+  const maxColors = options.maxColors ?? 64;
+  const pixelCount = width * height;
+
+  const palette = buildGlobalPalette(frames, width, height, maxColors);
+  const colors = palette.map((rgb) => formatColor(rgb, opts.colorFormat));
+  const transparentIndex = colors.length;
+  colors.push("transparent");
+
+  // Tokenize every frame (palette index, or -1 for source-transparent).
+  const cache = new Map<number, number>();
+  const tokenFrames = frames.map((frame) =>
+    tokenizeFrame(frame, palette, opts.alphaThreshold, cache),
+  );
+  const slot = (t: number) => (t === TRANSPARENT_TOKEN ? transparentIndex : t);
+
+  // A pixel is "changing" if its token differs across frames.
+  const changing = new Uint8Array(pixelCount);
+  for (let p = 0; p < pixelCount; p++) {
+    const first = tokenFrames[0]![p]!;
+    for (let f = 1; f < frames.length; f++) {
+      if (tokenFrames[f]![p]! !== first) {
+        changing[p] = 1;
+        break;
+      }
+    }
+  }
+
+  // Static base: unchanging pixels keep their colour, changing ones are cut out
+  // (transparent) so the animated overlay shows through.
+  const baseIndices = new Int32Array(pixelCount);
+  for (let p = 0; p < pixelCount; p++) {
+    baseIndices[p] = changing[p] ? transparentIndex : slot(tokenFrames[0]![p]!);
+  }
+  const baseImage: IndexedImage = {
+    width,
+    height,
+    colors,
+    indices: baseIndices,
+    hasAlpha: true,
+  };
+  const baseRows = buildRowGradients(baseImage, opts.cssVarPrefix);
+  const baseLayer = packLayers(baseRows, Infinity, Infinity)[0]!;
+  const { css: baseCss, layerClass } = buildCss(
+    baseImage,
+    [baseLayer],
+    resolveOptions({ ...options, singleElement: true }),
+  );
+  const meta = buildMeta(baseImage, [baseLayer], opts, layerClass);
+
+  // Rows that contain at least one changing pixel — only these appear in the
+  // overlay. Fully-static rows are omitted entirely, so the static background
+  // shows through them (nothing to repaint there each frame).
+  const activeRows: number[] = [];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (changing[y * width + x]) {
+        activeRows.push(y);
+        break;
+      }
+    }
+  }
+  const overlayPosition = activeRows
+    .map((y) => `0 calc(var(--pixel-height) * ${y})`)
+    .join(", ");
+
+  // Overlay per frame: only the changing pixels are defined; everything else is
+  // transparent (long transparent runs collapse to almost nothing under RLE).
+  const overlayBg = tokenFrames.map((tokens) => {
+    const idx = new Int32Array(pixelCount);
+    for (let p = 0; p < pixelCount; p++) {
+      idx[p] = changing[p] ? slot(tokens[p]!) : transparentIndex;
+    }
+    const rows = buildRowGradients(
+      { width, height, colors, indices: idx, hasAlpha: true },
+      opts.cssVarPrefix,
+    );
+    return activeRows.map((y) => rows.gradients[y]!).join(", ");
+  });
+
+  const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
+  const duration = options.duration ?? totalDelay / 1000;
+  const dur = `var(--pixel-anim-duration, ${duration}s)`;
+  const willChange = opts.willChange
+    ? `\n  will-change: background-image;`
+    : "";
+
+  const stops: string[] = [];
+  let elapsed = 0;
+  for (let f = 0; f < frames.length; f++) {
+    const pct = f === 0 ? 0 : round((elapsed / totalDelay) * 100);
+    stops.push(`  ${pct}% { background-image: ${overlayBg[f]!}; }`);
+    elapsed += delays[f] ?? 0;
+  }
+
+  let css = baseCss + "\n";
+  css +=
+    `\n${opts.selector} > .${layerClass} {` +
+    `\n  grid-column: 1;` +
+    `\n  grid-row: 1;` +
+    `\n  width: 100%;` +
+    `\n  height: 100%;` +
+    `\n  background-repeat: no-repeat;` +
+    `\n  background-size: 100% var(--pixel-height);` +
+    `\n  background-position: ${overlayPosition};` +
+    // Static frame 0 so the overlay is correct even before/without the animation
+    // (reduced-motion, or first paint); the keyframes then swap it per frame.
+    `\n  background-image: ${overlayBg[0]!};` +
+    `\n  animation: pxc-overlay ${dur} step-end infinite;` +
+    willChange +
+    `\n}\n\n` +
+    `@keyframes pxc-overlay {\n${stops.join("\n")}\n}\n`;
+
+  meta.animation = { mode: "overlay", duration, frames: frames.length };
+  meta.layerCount = 1; // one overlay layer over the element's own background
+
+  const result: ConvertResult = { css, meta };
+  if (opts.emitHtml) {
+    result.html = buildHtml(meta.selector, layerClass, 1, false);
   }
   return result;
 }
