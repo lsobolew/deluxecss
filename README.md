@@ -266,15 +266,22 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
 ```
 
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
-- Animated waterfall, palette mode (+ background-in-keyframes), original resolution: <http://localhost:5173/examples/waterfall/>
+- Animated waterfall, palette mode, original 640×286 (28 layers): <http://localhost:5173/examples/waterfall/>
+- Animated waterfall, palette mode, single layer (256×114, smoother): <http://localhost:5173/examples/waterfall-1layer/>
 - Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
 - 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
 
-Regenerate the waterfall example yourself:
+Regenerate the waterfall examples yourself:
 
 ```sh
-pixel-css monkey_island_waterfal.gif --animate --resize 200 --max-colors 48 \
-  --single-element --sizing pixel --scale 3 -o examples/waterfall/waterfall.css
+# original 640x286, spread across ~28 stacked layers
+pixel-css monkey_island_waterfal.gif --animate --max-colors 48 \
+  --bg-in-keyframes --sizing pixel -o examples/waterfall/waterfall.css
+
+# single layer, 256x114 scaled 2x — fewer composited layers, smoother playback
+pixel-css monkey_island_waterfal.gif --animate --resize 256 --max-colors 48 \
+  --bg-in-keyframes --single-element --sizing pixel --scale 2 \
+  -o examples/waterfall-1layer/waterfall.css
 ```
 
 ## Notes & tradeoffs
@@ -285,6 +292,15 @@ pixel-css monkey_island_waterfal.gif --animate --resize 200 --max-colors 48 \
   Pass `--at-property` / `emitAtProperty: true` so `--color-*` can be transitioned.
 - **File size.** Detailed photos produce large CSS. Quantize with `maxColors` and
   keep the source small; this technique shines on sprites and low-color art.
+- **Layers vs. playback smoothness.** A single element can only hold so much
+  background before the browser fails to paint it (roughly ~256px wide for a
+  detailed scene — beyond that it renders blank), which is why large images are
+  split across stacked layers. But every layer with `will-change` is a separate
+  compositing layer, and palette animation recomputes gradients on all of them
+  each tick — so a high-resolution multi-layer animation can stutter. If playback
+  matters more than resolution, prefer `--single-element` at a size that still
+  paints (see the `waterfall-1layer` example): one compositing layer and far
+  fewer pixels to recompute means much smoother animation.
 
 ## License
 
