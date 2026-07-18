@@ -268,8 +268,10 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
 
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
 - Animated waterfall, palette mode, original 640×286 (28 layers): <http://localhost:5173/examples/waterfall/>
-- Animated waterfall, palette mode, single layer (256×114, smoother): <http://localhost:5173/examples/waterfall-1layer/>
-- Same, with static colors inlined as literals (fewer variables): <http://localhost:5173/examples/waterfall-1layer-inline/>
+- Single layer (256×114), three variants to compare playback:
+  - background-image on the element: <http://localhost:5173/examples/waterfall-1layer-static-bg/>
+  - background-image in a held `@keyframes` (+ `will-change`): <http://localhost:5173/examples/waterfall-1layer/>
+  - held keyframe + static colors inlined as literals: <http://localhost:5173/examples/waterfall-1layer-inline/>
 - Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
 - 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
 
