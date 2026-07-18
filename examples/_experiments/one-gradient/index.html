@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>one-gradient experiment</title>
+<style>
+  body { margin: 0; background: #222; color: #eee; font-family: system-ui, sans-serif; }
+  figure { margin: 24px; }
+  figcaption { font-size: 13px; margin-bottom: 8px; color: #bbb; }
+  code { color: #9cf; }
+
+  /* (A) reference: one gradient per row */
+  .per-row {
+    width: 240px; height: 320px;
+    background-repeat: no-repeat;
+    background-size: 100% 20px;
+    background-image: linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 60px, rgb(214, 1, 1) 60px, rgb(214, 1, 1) 160px, rgb(0, 0, 0) 160px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 40px, rgb(214, 1, 1) 40px, rgb(214, 1, 1) 220px, rgb(0, 0, 0) 220px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 40px, rgb(110, 102, 0) 40px, rgb(110, 102, 0) 100px, rgb(246, 169, 1) 100px, rgb(246, 169, 1) 140px, rgb(110, 102, 0) 140px, rgb(110, 102, 0) 160px, rgb(246, 169, 1) 160px, rgb(246, 169, 1) 180px, rgb(0, 0, 0) 180px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 20px, rgb(110, 102, 0) 20px, rgb(110, 102, 0) 40px, rgb(246, 169, 1) 40px, rgb(246, 169, 1) 60px, rgb(110, 102, 0) 60px, rgb(110, 102, 0) 80px, rgb(246, 169, 1) 80px, rgb(246, 169, 1) 140px, rgb(110, 102, 0) 140px, rgb(110, 102, 0) 160px, rgb(246, 169, 1) 160px, rgb(246, 169, 1) 220px, rgb(0, 0, 0) 220px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 20px, rgb(110, 102, 0) 20px, rgb(110, 102, 0) 40px, rgb(246, 169, 1) 40px, rgb(246, 169, 1) 60px, rgb(110, 102, 0) 60px, rgb(110, 102, 0) 100px, rgb(246, 169, 1) 100px, rgb(246, 169, 1) 160px, rgb(110, 102, 0) 160px, rgb(110, 102, 0) 180px, rgb(246, 169, 1) 180px, rgb(246, 169, 1) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 20px, rgb(110, 102, 0) 20px, rgb(110, 102, 0) 60px, rgb(246, 169, 1) 60px, rgb(246, 169, 1) 140px, rgb(110, 102, 0) 140px, rgb(110, 102, 0) 220px, rgb(0, 0, 0) 220px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 60px, rgb(246, 169, 1) 60px, rgb(246, 169, 1) 200px, rgb(0, 0, 0) 200px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 40px, rgb(110, 102, 0) 40px, rgb(110, 102, 0) 80px, rgb(214, 1, 1) 80px, rgb(214, 1, 1) 100px, rgb(110, 102, 0) 100px, rgb(110, 102, 0) 160px, rgb(0, 0, 0) 160px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 20px, rgb(110, 102, 0) 20px, rgb(110, 102, 0) 80px, rgb(214, 1, 1) 80px, rgb(214, 1, 1) 100px, rgb(110, 102, 0) 100px, rgb(110, 102, 0) 140px, rgb(214, 1, 1) 140px, rgb(214, 1, 1) 160px, rgb(110, 102, 0) 160px, rgb(110, 102, 0) 220px, rgb(0, 0, 0) 220px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(110, 102, 0) 0px, rgb(110, 102, 0) 80px, rgb(214, 1, 1) 80px, rgb(214, 1, 1) 160px, rgb(110, 102, 0) 160px, rgb(110, 102, 0) 240px),
+      linear-gradient(to right, rgb(246, 169, 1) 0px, rgb(246, 169, 1) 40px, rgb(110, 102, 0) 40px, rgb(110, 102, 0) 60px, rgb(214, 1, 1) 60px, rgb(214, 1, 1) 80px, rgb(246, 169, 1) 80px, rgb(246, 169, 1) 100px, rgb(214, 1, 1) 100px, rgb(214, 1, 1) 140px, rgb(246, 169, 1) 140px, rgb(246, 169, 1) 160px, rgb(214, 1, 1) 160px, rgb(214, 1, 1) 180px, rgb(110, 102, 0) 180px, rgb(110, 102, 0) 200px, rgb(246, 169, 1) 200px, rgb(246, 169, 1) 240px),
+      linear-gradient(to right, rgb(246, 169, 1) 0px, rgb(246, 169, 1) 60px, rgb(214, 1, 1) 60px, rgb(214, 1, 1) 180px, rgb(246, 169, 1) 180px, rgb(246, 169, 1) 240px),
+      linear-gradient(to right, rgb(246, 169, 1) 0px, rgb(246, 169, 1) 40px, rgb(214, 1, 1) 40px, rgb(214, 1, 1) 200px, rgb(246, 169, 1) 200px, rgb(246, 169, 1) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 40px, rgb(214, 1, 1) 40px, rgb(214, 1, 1) 100px, rgb(0, 0, 0) 100px, rgb(0, 0, 0) 140px, rgb(214, 1, 1) 140px, rgb(214, 1, 1) 200px, rgb(0, 0, 0) 200px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(0, 0, 0) 0px, rgb(0, 0, 0) 20px, rgb(110, 102, 0) 20px, rgb(110, 102, 0) 80px, rgb(0, 0, 0) 80px, rgb(0, 0, 0) 160px, rgb(110, 102, 0) 160px, rgb(110, 102, 0) 220px, rgb(0, 0, 0) 220px, rgb(0, 0, 0) 240px),
+      linear-gradient(to right, rgb(110, 102, 0) 0px, rgb(110, 102, 0) 80px, rgb(0, 0, 0) 80px, rgb(0, 0, 0) 160px, rgb(110, 102, 0) 160px, rgb(110, 102, 0) 240px);
+    background-position: 0 0px, 0 20px, 0 40px, 0 60px, 0 80px, 0 100px, 0 120px, 0 140px, 0 160px, 0 180px, 0 200px, 0 220px, 0 240px, 0 260px, 0 280px, 0 300px;
+  }
+
+  /* (B) the experiment: ONE gradient on a wrapping inline text run.
+        --u = one character advance (1ch). W chars per line, H lines.
+        line-height is set to ~1ch so the pixels come out roughly square
+        (the ch:font-size ratio is font-dependent — tuned for this monospace). */
+  .box {
+    --u: 1ch;
+    font-family: monospace; font-size: 20px; line-height: 12px;
+    width: calc(var(--u) * 12);         /* exactly W characters wide */
+    overflow: hidden;
+    white-space: normal; word-break: break-all;
+  }
+  .strip {
+    -webkit-box-decoration-break: slice;
+    box-decoration-break: slice;
+    color: transparent;                    /* hide the filler glyphs */
+    background-image: linear-gradient(to right, rgb(0, 0, 0) calc(var(--u) * 0), rgb(0, 0, 0) calc(var(--u) * 3), rgb(214, 1, 1) calc(var(--u) * 3), rgb(214, 1, 1) calc(var(--u) * 8), rgb(0, 0, 0) calc(var(--u) * 8), rgb(0, 0, 0) calc(var(--u) * 14), rgb(214, 1, 1) calc(var(--u) * 14), rgb(214, 1, 1) calc(var(--u) * 23), rgb(0, 0, 0) calc(var(--u) * 23), rgb(0, 0, 0) calc(var(--u) * 26), rgb(110, 102, 0) calc(var(--u) * 26), rgb(110, 102, 0) calc(var(--u) * 29), rgb(246, 169, 1) calc(var(--u) * 29), rgb(246, 169, 1) calc(var(--u) * 31), rgb(110, 102, 0) calc(var(--u) * 31), rgb(110, 102, 0) calc(var(--u) * 32), rgb(246, 169, 1) calc(var(--u) * 32), rgb(246, 169, 1) calc(var(--u) * 33), rgb(0, 0, 0) calc(var(--u) * 33), rgb(0, 0, 0) calc(var(--u) * 37), rgb(110, 102, 0) calc(var(--u) * 37), rgb(110, 102, 0) calc(var(--u) * 38), rgb(246, 169, 1) calc(var(--u) * 38), rgb(246, 169, 1) calc(var(--u) * 39), rgb(110, 102, 0) calc(var(--u) * 39), rgb(110, 102, 0) calc(var(--u) * 40), rgb(246, 169, 1) calc(var(--u) * 40), rgb(246, 169, 1) calc(var(--u) * 43), rgb(110, 102, 0) calc(var(--u) * 43), rgb(110, 102, 0) calc(var(--u) * 44), rgb(246, 169, 1) calc(var(--u) * 44), rgb(246, 169, 1) calc(var(--u) * 47), rgb(0, 0, 0) calc(var(--u) * 47), rgb(0, 0, 0) calc(var(--u) * 49), rgb(110, 102, 0) calc(var(--u) * 49), rgb(110, 102, 0) calc(var(--u) * 50), rgb(246, 169, 1) calc(var(--u) * 50), rgb(246, 169, 1) calc(var(--u) * 51), rgb(110, 102, 0) calc(var(--u) * 51), rgb(110, 102, 0) calc(var(--u) * 53), rgb(246, 169, 1) calc(var(--u) * 53), rgb(246, 169, 1) calc(var(--u) * 56), rgb(110, 102, 0) calc(var(--u) * 56), rgb(110, 102, 0) calc(var(--u) * 57), rgb(246, 169, 1) calc(var(--u) * 57), rgb(246, 169, 1) calc(var(--u) * 60), rgb(0, 0, 0) calc(var(--u) * 60), rgb(0, 0, 0) calc(var(--u) * 61), rgb(110, 102, 0) calc(var(--u) * 61), rgb(110, 102, 0) calc(var(--u) * 63), rgb(246, 169, 1) calc(var(--u) * 63), rgb(246, 169, 1) calc(var(--u) * 67), rgb(110, 102, 0) calc(var(--u) * 67), rgb(110, 102, 0) calc(var(--u) * 71), rgb(0, 0, 0) calc(var(--u) * 71), rgb(0, 0, 0) calc(var(--u) * 75), rgb(246, 169, 1) calc(var(--u) * 75), rgb(246, 169, 1) calc(var(--u) * 82), rgb(0, 0, 0) calc(var(--u) * 82), rgb(0, 0, 0) calc(var(--u) * 86), rgb(110, 102, 0) calc(var(--u) * 86), rgb(110, 102, 0) calc(var(--u) * 88), rgb(214, 1, 1) calc(var(--u) * 88), rgb(214, 1, 1) calc(var(--u) * 89), rgb(110, 102, 0) calc(var(--u) * 89), rgb(110, 102, 0) calc(var(--u) * 92), rgb(0, 0, 0) calc(var(--u) * 92), rgb(0, 0, 0) calc(var(--u) * 97), rgb(110, 102, 0) calc(var(--u) * 97), rgb(110, 102, 0) calc(var(--u) * 100), rgb(214, 1, 1) calc(var(--u) * 100), rgb(214, 1, 1) calc(var(--u) * 101), rgb(110, 102, 0) calc(var(--u) * 101), rgb(110, 102, 0) calc(var(--u) * 103), rgb(214, 1, 1) calc(var(--u) * 103), rgb(214, 1, 1) calc(var(--u) * 104), rgb(110, 102, 0) calc(var(--u) * 104), rgb(110, 102, 0) calc(var(--u) * 107), rgb(0, 0, 0) calc(var(--u) * 107), rgb(0, 0, 0) calc(var(--u) * 108), rgb(110, 102, 0) calc(var(--u) * 108), rgb(110, 102, 0) calc(var(--u) * 112), rgb(214, 1, 1) calc(var(--u) * 112), rgb(214, 1, 1) calc(var(--u) * 116), rgb(110, 102, 0) calc(var(--u) * 116), rgb(110, 102, 0) calc(var(--u) * 120), rgb(246, 169, 1) calc(var(--u) * 120), rgb(246, 169, 1) calc(var(--u) * 122), rgb(110, 102, 0) calc(var(--u) * 122), rgb(110, 102, 0) calc(var(--u) * 123), rgb(214, 1, 1) calc(var(--u) * 123), rgb(214, 1, 1) calc(var(--u) * 124), rgb(246, 169, 1) calc(var(--u) * 124), rgb(246, 169, 1) calc(var(--u) * 125), rgb(214, 1, 1) calc(var(--u) * 125), rgb(214, 1, 1) calc(var(--u) * 127), rgb(246, 169, 1) calc(var(--u) * 127), rgb(246, 169, 1) calc(var(--u) * 128), rgb(214, 1, 1) calc(var(--u) * 128), rgb(214, 1, 1) calc(var(--u) * 129), rgb(110, 102, 0) calc(var(--u) * 129), rgb(110, 102, 0) calc(var(--u) * 130), rgb(246, 169, 1) calc(var(--u) * 130), rgb(246, 169, 1) calc(var(--u) * 135), rgb(214, 1, 1) calc(var(--u) * 135), rgb(214, 1, 1) calc(var(--u) * 141), rgb(246, 169, 1) calc(var(--u) * 141), rgb(246, 169, 1) calc(var(--u) * 146), rgb(214, 1, 1) calc(var(--u) * 146), rgb(214, 1, 1) calc(var(--u) * 154), rgb(246, 169, 1) calc(var(--u) * 154), rgb(246, 169, 1) calc(var(--u) * 156), rgb(0, 0, 0) calc(var(--u) * 156), rgb(0, 0, 0) calc(var(--u) * 158), rgb(214, 1, 1) calc(var(--u) * 158), rgb(214, 1, 1) calc(var(--u) * 161), rgb(0, 0, 0) calc(var(--u) * 161), rgb(0, 0, 0) calc(var(--u) * 163), rgb(214, 1, 1) calc(var(--u) * 163), rgb(214, 1, 1) calc(var(--u) * 166), rgb(0, 0, 0) calc(var(--u) * 166), rgb(0, 0, 0) calc(var(--u) * 169), rgb(110, 102, 0) calc(var(--u) * 169), rgb(110, 102, 0) calc(var(--u) * 172), rgb(0, 0, 0) calc(var(--u) * 172), rgb(0, 0, 0) calc(var(--u) * 176), rgb(110, 102, 0) calc(var(--u) * 176), rgb(110, 102, 0) calc(var(--u) * 179), rgb(0, 0, 0) calc(var(--u) * 179), rgb(0, 0, 0) calc(var(--u) * 180), rgb(110, 102, 0) calc(var(--u) * 180), rgb(110, 102, 0) calc(var(--u) * 184), rgb(0, 0, 0) calc(var(--u) * 184), rgb(0, 0, 0) calc(var(--u) * 188), rgb(110, 102, 0) calc(var(--u) * 188), rgb(110, 102, 0) calc(var(--u) * 192));
+    background-size: calc(var(--u) * 192) 12px;
+    background-repeat: no-repeat;
+  }
+</style></head>
+<body>
+  <figure>
+    <figcaption>(A) reference — one <code>linear-gradient</code> per row (16 gradients)</figcaption>
+    <div class="per-row"></div>
+  </figure>
+
+  <figure>
+    <figcaption>(B) ONE <code>linear-gradient</code> (136 stops) on a wrapping inline text run (12×16 chars), <code>box-decoration-break: slice</code></figcaption>
+    <div class="box"><span class="strip">000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</span></div>
+  </figure>
+</body></html>
