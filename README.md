@@ -172,14 +172,16 @@ You can also hand the `background-image` to the browser through a **held
 `@keyframes`** rule (`0%,100%`) instead of setting it statically on the element:
 
 ```sh
-pixel-css scene.gif --animate --bg-in-keyframes --single-element -o scene.css
+pixel-css scene.gif --animate --bg-in-keyframes -o scene.css
 ```
 
 Because the background is now animation-driven, the browser gives the element its
 own compositing layer (reinforced by `will-change`), even for a still image. It
 composes with palette animation — the background layout is *held* while the
 `--color-*` values cycle — so you get the layer-promotion benefit and a live
-palette at once. (`examples/waterfall` uses this.)
+palette at once. For large images each stacked layer gets its own held keyframe,
+so it works at full resolution. (`examples/waterfall` uses this at the source
+GIF's original 640×286 resolution.)
 
 #### Building an animation from separate frame files
 
@@ -207,7 +209,7 @@ this way.
 | `animationMode` | `"palette"` | `palette` (cycle `--color-*`) or `frames` (swap `background-image`). |
 | `maxFrames` | *(all)* | Sample the animation down to at most N frames (evenly). |
 | `willChange` | `true` | Emit `will-change` layer-promotion hint (frames mode). |
-| `backgroundInKeyframes` | `false` | Deliver `background-image` via a held `@keyframes` for compositing-layer promotion (implies `singleElement`). |
+| `backgroundInKeyframes` | `false` | Deliver `background-image` via a held `@keyframes` for compositing-layer promotion (single element, or per `<div>` layer). |
 | `scale` | `1` | Written into `--scale`; override per-element in CSS. |
 | `sizing` | `"container"` | `container` (crisp, fluid; needs a sized host), `percent` (widest support), `pixel` (integer px, seam-free, not fluid). |
 | `layerChunkSize` | `50` | Rows packed per background layer element. |
@@ -264,7 +266,7 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
 ```
 
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
-- Animated waterfall, palette mode (+ background-in-keyframes): <http://localhost:5173/examples/waterfall/>
+- Animated waterfall, palette mode (+ background-in-keyframes), original resolution: <http://localhost:5173/examples/waterfall/>
 - Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
 - 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
 

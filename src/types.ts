@@ -123,10 +123,11 @@ export interface Options {
 
   /**
    * Deliver the `background-image` from inside a held `@keyframes` rule
-   * (`0%,100%`) driven by an animation, instead of as a static property on the
-   * element. This promotes the element to its own compositing layer even for a
-   * still image, and composes with palette animation (the background layout is
-   * held while `--color-*` cycle). Implies `singleElement`. Default false.
+   * (`0%,100%`) driven by an animation, instead of as a static property. This
+   * promotes the element to its own compositing layer even for a still image,
+   * and composes with palette animation (the background layout is held while
+   * `--color-*` cycle). Works for a single element and, per layer, for a stack
+   * of `<div>` layers (so it scales to full-resolution images). Default false.
    */
   backgroundInKeyframes?: boolean;
 }

@@ -155,7 +155,7 @@ describe("convertAnimated", () => {
   });
 
   describe("backgroundInKeyframes (folder-9 technique)", () => {
-    it("delivers background-image via a held keyframe, not statically", () => {
+    it("single element: shares one animation list with the palette tracks", () => {
       const anim = frames(
         [
           [RED, BLUE],
@@ -164,15 +164,43 @@ describe("convertAnimated", () => {
         2,
         1,
       );
-      const { css } = convertAnimated(anim, { backgroundInKeyframes: true });
+      const { css } = convertAnimated(anim, {
+        backgroundInKeyframes: true,
+        singleElement: true,
+      });
       // no static background-image before the first @keyframes block
       const head = css.split("@keyframes")[0]!;
       expect(head).not.toContain("background-image:");
-      // a held bg keyframe + layer promotion, plus palette still cycles
       expect(css).toContain("@keyframes pxc-bg");
       expect(css).toContain("0%, 100%");
       expect(css).toContain("will-change: background-image;");
+      // pxc-bg and the palette tracks share the single element's animation list
       expect(css).toMatch(/animation:\s*pxc-bg[^;]*pxc-\d+/);
+    });
+
+    it("layered: each layer animates its own held background", () => {
+      // 4 rows tall, chunk 2 → 2 layers; palette cycles on the container.
+      const anim: DecodedFrames = {
+        width: 1,
+        height: 4,
+        frames: [
+          Uint8Array.from([[RED], [RED], [BLUE], [BLUE]].flat().flat()),
+          Uint8Array.from([[BLUE], [BLUE], [RED], [RED]].flat().flat()),
+        ],
+        delays: [100, 100],
+      };
+      const { css } = convertAnimated(anim, {
+        backgroundInKeyframes: true,
+        layerChunkSize: 2,
+      });
+      // per-layer held background keyframes, targeted at the layer children
+      expect(css).toContain("@keyframes pxc-bg-0");
+      expect(css).toContain("@keyframes pxc-bg-1");
+      expect(css).toMatch(/\.pixel-image__layer:nth-child\(1\)[^}]*animation: pxc-bg-0/);
+      expect(css).toContain("will-change: background-image;");
+      // no static background-image anywhere (all delivered via keyframes)
+      const head = css.split("@keyframes")[0]!;
+      expect(head).not.toContain("background-image:");
     });
   });
 });

@@ -1,5 +1,5 @@
 import { buildPaletteSync, utils } from "image-q";
-import { buildCss } from "./css.js";
+import { buildCss, heldBackgroundCss } from "./css.js";
 import { decodeFrames } from "./decode.js";
 import { packLayers } from "./layers.js";
 import { buildMeta } from "./meta.js";
@@ -89,32 +89,24 @@ export function convertAnimated(
   const indexed: IndexedImage = { width, height, colors, indices, hasAlpha };
 
   const rows = buildRowGradients(indexed, opts.cssVarPrefix);
-  const single = opts.singleElement || opts.backgroundInKeyframes;
-  const chunk = single ? Infinity : opts.layerChunkSize;
-  const stopBudget = single ? Infinity : opts.maxStopsPerLayer;
+  const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
+  const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
-  const { css: baseCss, layerClass, baseBackground } = buildCss(
+  const { css: baseCss, layerClass, baseBackgrounds } = buildCss(
     indexed,
     layers,
     opts,
   );
   const meta = buildMeta(indexed, layers, opts, layerClass);
 
-  // 5. Animation: keyframes + an animation list for the tracks that change.
+  // 5. Animation: one keyframes rule per palette slot that changes, plus (with
+  //    backgroundInKeyframes) the held background keyframes.
   const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
   const duration = options.duration ?? totalDelay / 1000;
+  const dur = `var(--pixel-anim-duration, ${duration}s)`;
 
   const keyframeBlocks: string[] = [];
   const animationNames: string[] = [];
-
-  // Folder-9 technique: hold the background-image in its own animation so the
-  // element is composited on its own layer while the palette cycles.
-  if (baseBackground) {
-    animationNames.push("pxc-bg");
-    keyframeBlocks.push(
-      `@keyframes pxc-bg {\n  0%, 100% {\n    background-image: ${baseBackground.image};\n    background-position: ${baseBackground.position};\n  }\n}`,
-    );
-  }
 
   trackSequences.forEach((seq, track) => {
     if (isConstant(seq)) return;
@@ -124,28 +116,43 @@ export function convertAnimated(
       buildKeyframes(name, track, seq, delays, totalDelay, opts.cssVarPrefix, tokenToColor),
     );
   });
+  const paletteSlotCount = animationNames.length;
 
-  const willChange =
-    baseBackground && opts.willChange
+  // Folder-9 technique: hold the background-image in its own animation so the
+  // element is composited on its own layer while the palette cycles. For a
+  // single element it must share the one `animation` list with the palette
+  // tracks; for layered output each layer animates its own held background.
+  let selectorWillChange = "";
+  let layerBgCss = "";
+  if (baseBackgrounds && opts.singleElement) {
+    animationNames.unshift("pxc-bg");
+    keyframeBlocks.unshift(
+      `@keyframes pxc-bg {\n  0%, 100% {\n    background-image: ${baseBackgrounds[0]!.image};\n    background-position: ${baseBackgrounds[0]!.position};\n  }\n}`,
+    );
+    selectorWillChange = opts.willChange
       ? `\n  will-change: background-image;`
       : "";
+  } else if (baseBackgrounds) {
+    layerBgCss = heldBackgroundCss(baseBackgrounds, opts, layerClass, dur);
+  }
 
   let css = baseCss;
   if (animationNames.length > 0) {
     const list = animationNames
-      .map((n) => `${n} var(--pixel-anim-duration, ${duration}s) step-end infinite`)
+      .map((n) => `${n} ${dur} step-end infinite`)
       .join(", ");
     css +=
-      `\n${opts.selector} {\n  animation: ${list};${willChange}\n}\n\n` +
+      `\n${opts.selector} {\n  animation: ${list};${selectorWillChange}\n}\n\n` +
       keyframeBlocks.join("\n\n") +
       "\n";
   }
+  css += layerBgCss;
 
   meta.animation = {
     mode: "palette",
     duration,
     frames: frames.length,
-    animatedSlots: animationNames.length,
+    animatedSlots: paletteSlotCount,
   };
 
   const result: ConvertResult = { css, meta };

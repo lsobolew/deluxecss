@@ -1,4 +1,4 @@
-import { buildCss } from "./css.js";
+import { buildCss, heldBackgroundCss } from "./css.js";
 import { decode } from "./decode.js";
 import { packLayers } from "./layers.js";
 import { buildMeta } from "./meta.js";
@@ -37,7 +37,7 @@ export function convert(
   const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
   const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
-  const { css: baseCss, layerClass, baseBackground } = buildCss(
+  const { css: baseCss, layerClass, baseBackgrounds } = buildCss(
     indexed,
     layers,
     opts,
@@ -45,18 +45,10 @@ export function convert(
   const meta = buildMeta(indexed, layers, opts, layerClass);
 
   let css = baseCss;
-  if (baseBackground) {
-    // Folder-9 technique: deliver the static background through a held @keyframes
-    // so the element is promoted to its own compositing layer.
-    const willChange = opts.willChange
-      ? `\n  will-change: background-image;`
-      : "";
-    css +=
-      `\n${opts.selector} {` +
-      `\n  animation: pxc-bg 1s step-end infinite;` +
-      willChange +
-      `\n}\n\n` +
-      `@keyframes pxc-bg {\n  0%, 100% {\n    background-image: ${baseBackground.image};\n    background-position: ${baseBackground.position};\n  }\n}\n`;
+  if (baseBackgrounds) {
+    // Folder-9 technique: deliver the (static) background through a held
+    // @keyframes so the element is promoted to its own compositing layer.
+    css += heldBackgroundCss(baseBackgrounds, opts, layerClass, "1s");
   }
 
   const result: ConvertResult = { css, meta };

@@ -5,10 +5,12 @@ export interface CssParts {
   css: string;
   layerClass: string;
   /**
-   * Present when `backgroundInKeyframes` is set: the background the caller should
-   * emit inside a held `@keyframes` rule instead of statically on the element.
+   * Present when `backgroundInKeyframes` is set: one entry per stacked layer (in
+   * order) that the caller must emit inside a held `@keyframes` rule instead of
+   * statically. A single-element image yields one entry; a layered image yields
+   * one per `.__layer` child.
    */
-  baseBackground?: { image: string; position: string };
+  baseBackgrounds?: Array<{ image: string; position: string }>;
 }
 
 /** Assemble the final stylesheet from the palette and packed layers. */
@@ -36,7 +38,7 @@ export function buildCss(
     );
   }
 
-  const single = opts.singleElement || opts.backgroundInKeyframes;
+  const single = opts.singleElement;
   if (single && layers.length > 1) {
     throw new Error(
       `singleElement requires the image to fit in one layer, but it needs ${layers.length}. ` +
@@ -46,7 +48,10 @@ export function buildCss(
 
   const baseClass = selector.startsWith(".") ? selector.slice(1) : selector;
   const layerClass = `${baseClass}__layer`;
-  const bgInKeyframes = opts.backgroundInKeyframes && layers.length === 1;
+  // Deliver the background from a held keyframe (folder-9 technique). Works for a
+  // single element and, per-layer, for a stack of `<div>` layers.
+  const bgInKeyframes = opts.backgroundInKeyframes && layerElement !== "pseudo";
+  const baseBackgrounds: Array<{ image: string; position: string }> = [];
 
   const blocks: string[] = [];
 
@@ -67,23 +72,20 @@ export function buildCss(
 
   // Container / sizing (+ background painted directly on it in single-element mode).
   let containerBody = sizingDecls(width, height, sizing, scale);
-  let baseBackground: CssParts["baseBackground"];
   if (single && layers.length === 1) {
     const layer = layers[0]!;
+    containerBody +=
+      `\n  background-repeat: no-repeat;` +
+      `\n  background-size: 100% var(--pixel-height);`;
     if (bgInKeyframes) {
       // Background is delivered by the caller via a held @keyframes rule; the
       // element only sets the size/repeat so the animated image lands correctly.
-      containerBody +=
-        `\n  background-repeat: no-repeat;` +
-        `\n  background-size: 100% var(--pixel-height);`;
-      baseBackground = {
+      baseBackgrounds.push({
         image: layer.backgroundImage,
         position: layer.backgroundPosition,
-      };
+      });
     } else {
       containerBody +=
-        `\n  background-repeat: no-repeat;` +
-        `\n  background-size: 100% var(--pixel-height);` +
         `\n  background-image: ${layer.backgroundImage};` +
         `\n  background-position: ${layer.backgroundPosition};`;
     }
@@ -123,17 +125,59 @@ export function buildCss(
     );
     for (let i = 0; i < layers.length; i++) {
       const layer = layers[i]!;
-      blocks.push(
-        `${selector} > .${layerClass}:nth-child(${i + 1}) {\n` +
-          `  background-image: ${layer.backgroundImage};\n` +
-          `  background-position: ${layer.backgroundPosition};\n` +
-          `}`,
-      );
+      if (bgInKeyframes) {
+        // The caller animates each layer's background via a held keyframe.
+        baseBackgrounds.push({
+          image: layer.backgroundImage,
+          position: layer.backgroundPosition,
+        });
+      } else {
+        blocks.push(
+          `${selector} > .${layerClass}:nth-child(${i + 1}) {\n` +
+            `  background-image: ${layer.backgroundImage};\n` +
+            `  background-position: ${layer.backgroundPosition};\n` +
+            `}`,
+        );
+      }
     }
   }
 
   const css = minify ? minifyCss(blocks.join("\n")) : blocks.join("\n\n") + "\n";
-  return { css, layerClass, baseBackground };
+  return {
+    css,
+    layerClass,
+    baseBackgrounds: bgInKeyframes ? baseBackgrounds : undefined,
+  };
+}
+
+/**
+ * Emit the held `@keyframes` that deliver each layer's background (folder-9
+ * technique), targeting the container in single-element mode or each `.__layer`
+ * child otherwise. `duration` is the CSS time (e.g. `1s`) for the held loop.
+ */
+export function heldBackgroundCss(
+  baseBackgrounds: Array<{ image: string; position: string }>,
+  opts: ResolvedOptions,
+  layerClass: string,
+  duration: string,
+): string {
+  const willChange = opts.willChange
+    ? `\n  will-change: background-image;`
+    : "";
+  const blocks: string[] = [];
+  baseBackgrounds.forEach((bg, i) => {
+    const name = opts.singleElement ? "pxc-bg" : `pxc-bg-${i}`;
+    const target = opts.singleElement
+      ? opts.selector
+      : `${opts.selector} > .${layerClass}:nth-child(${i + 1})`;
+    blocks.push(
+      `${target} {\n  animation: ${name} ${duration} step-end infinite;${willChange}\n}`,
+    );
+    blocks.push(
+      `@keyframes ${name} {\n  0%, 100% {\n    background-image: ${bg.image};\n    background-position: ${bg.position};\n  }\n}`,
+    );
+  });
+  return "\n" + blocks.join("\n\n") + "\n";
 }
 
 function sizingDecls(

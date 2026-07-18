@@ -29,7 +29,7 @@ Options:
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --no-will-change        Omit the will-change hint (frames mode)
       --bg-in-keyframes       Deliver background-image via a held @keyframes rule
-                              (compositing-layer promotion; implies single-element)
+                              (compositing-layer promotion; single or per-layer)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
