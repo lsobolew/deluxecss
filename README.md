@@ -210,6 +210,7 @@ this way.
 | `maxFrames` | *(all)* | Sample the animation down to at most N frames (evenly). |
 | `willChange` | `true` | Emit `will-change` layer-promotion hint (frames mode). |
 | `backgroundInKeyframes` | `false` | Deliver `background-image` via a held `@keyframes` for compositing-layer promotion (single element, or per `<div>` layer). |
+| `inlineStaticColors` | `false` | Palette animation: inline colors that never change as literals, keeping only animating colors as `--color-*` variables. |
 | `scale` | `1` | Written into `--scale`; override per-element in CSS. |
 | `sizing` | `"container"` | `container` (crisp, fluid; needs a sized host), `percent` (widest support), `pixel` (integer px, seam-free, not fluid). |
 | `layerChunkSize` | `50` | Rows packed per background layer element. |
@@ -268,6 +269,7 @@ npm run demo   # builds, then serves the examples on http://localhost:5173
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
 - Animated waterfall, palette mode, original 640×286 (28 layers): <http://localhost:5173/examples/waterfall/>
 - Animated waterfall, palette mode, single layer (256×114, smoother): <http://localhost:5173/examples/waterfall-1layer/>
+- Same, with static colors inlined as literals (fewer variables): <http://localhost:5173/examples/waterfall-1layer-inline/>
 - Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
 - 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
 
@@ -292,6 +294,12 @@ pixel-css monkey_island_waterfal.gif --animate --resize 256 --max-colors 48 \
   Pass `--at-property` / `emitAtProperty: true` so `--color-*` can be transitioned.
 - **File size.** Detailed photos produce large CSS. Quantize with `maxColors` and
   keep the source small; this technique shines on sprites and low-color art.
+- **Inlining static colors.** In `palette` mode, most pixels usually don't change
+  over the loop. `--inline-static-colors` / `inlineStaticColors: true` writes those
+  constant colors as literal hex in the gradients and keeps only the *animating*
+  colors as `--color-*` variables — cutting `var()` references dramatically (in the
+  waterfall example, ~35.7k → ~4.2k). The animating colors stay controllable; the
+  inlined ones no longer are. See `examples/waterfall-1layer-inline`.
 - **Layers vs. playback smoothness.** A single element can only hold so much
   background before the browser fails to paint it (roughly ~256px wide for a
   detailed scene — beyond that it renders blank), which is why large images are

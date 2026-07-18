@@ -130,6 +130,14 @@ export interface Options {
    * of `<div>` layers (so it scales to full-resolution images). Default false.
    */
   backgroundInKeyframes?: boolean;
+
+  /**
+   * Palette animation only: inline colors that never change during the loop as
+   * literal hex/rgb values in the gradients, keeping only the colors that *do*
+   * animate as `--color-*` custom properties. Cuts the number of variables and
+   * `var()` lookups sharply (static regions dominate most images). Default false.
+   */
+  inlineStaticColors?: boolean;
 }
 
 /** Fully-resolved options with every default applied. */

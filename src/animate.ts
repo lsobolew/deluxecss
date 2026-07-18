@@ -88,7 +88,20 @@ export function convertAnimated(
 
   const indexed: IndexedImage = { width, height, colors, indices, hasAlpha };
 
-  const rows = buildRowGradients(indexed, opts.cssVarPrefix);
+  // Which slots (tracks) actually change over the loop — only these need to be
+  // custom properties. With inlineStaticColors, constant slots become literals.
+  const animatedSlots = new Set<number>();
+  trackSequences.forEach((seq, track) => {
+    if (!isConstant(seq)) animatedSlots.add(track);
+  });
+
+  const colorRef = opts.inlineStaticColors
+    ? (i: number) =>
+        animatedSlots.has(i) ? `var(--${opts.cssVarPrefix}-${i})` : colors[i]!
+    : undefined;
+  const paletteIndices = opts.inlineStaticColors ? animatedSlots : undefined;
+
+  const rows = buildRowGradients(indexed, opts.cssVarPrefix, colorRef);
   const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
   const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
@@ -96,6 +109,7 @@ export function convertAnimated(
     indexed,
     layers,
     opts,
+    paletteIndices,
   );
   const meta = buildMeta(indexed, layers, opts, layerClass);
 

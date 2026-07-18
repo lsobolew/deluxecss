@@ -18,6 +18,11 @@ export function buildCss(
   image: IndexedImage,
   layers: Layer[],
   opts: ResolvedOptions,
+  /**
+   * Which palette indices to emit as custom properties. Omit to emit all; pass a
+   * set to skip colors that were inlined as literals in the gradients.
+   */
+  paletteIndices?: Set<number>,
 ): CssParts {
   const { width, height, colors } = image;
   const {
@@ -58,15 +63,18 @@ export function buildCss(
   // @property registration — lets palette colors interpolate when transitioned.
   if (emitAtProperty) {
     for (let i = 0; i < colors.length; i++) {
+      if (paletteIndices && !paletteIndices.has(i)) continue;
       blocks.push(
         `@property --${cssVarPrefix}-${i} {\n  syntax: "<color>";\n  inherits: true;\n  initial-value: ${colors[i]};\n}`,
       );
     }
   }
 
-  // Palette custom properties.
+  // Palette custom properties (only the ones actually referenced as variables).
   const paletteVars = colors
-    .map((c, i) => `  --${cssVarPrefix}-${i}: ${c};`)
+    .map((c, i) => ({ c, i }))
+    .filter(({ i }) => !paletteIndices || paletteIndices.has(i))
+    .map(({ c, i }) => `  --${cssVarPrefix}-${i}: ${c};`)
     .join("\n");
   blocks.push(`${paletteSelector} {\n${paletteVars}\n}`);
 

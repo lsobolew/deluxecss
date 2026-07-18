@@ -178,6 +178,29 @@ describe("convertAnimated", () => {
       expect(css).toMatch(/animation:\s*pxc-bg[^;]*pxc-\d+/);
     });
 
+    it("inlineStaticColors keeps only animating colors as variables", () => {
+      // pixel 0 is always RED (static → inline), pixel 1 GREEN→BLUE (animated → var).
+      const GREEN = [0, 255, 0, 255];
+      const anim = frames(
+        [
+          [RED, GREEN],
+          [RED, BLUE],
+        ],
+        2,
+        1,
+      );
+      const plain = convertAnimated(anim);
+      const inlined = convertAnimated(anim, { inlineStaticColors: true });
+      const refCount = (css: string) =>
+        (css.match(/var\(--color-\d+\)/g) ?? []).length;
+      // far fewer var() references once the static color is inlined
+      expect(refCount(inlined.css)).toBeLessThan(refCount(plain.css));
+      // the constant red is now a literal in the gradient
+      expect(inlined.css).toContain("#ff0000");
+      // an animating color is still a variable (so it can be keyframed)
+      expect(inlined.css).toMatch(/var\(--color-\d+\)/);
+    });
+
     it("layered: each layer animates its own held background", () => {
       // 4 rows tall, chunk 2 → 2 layers; palette cycles on the container.
       const anim: DecodedFrames = {

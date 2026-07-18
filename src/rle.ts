@@ -23,10 +23,15 @@ export interface RowGradients {
 export function buildRowGradients(
   image: IndexedImage,
   cssVarPrefix: string,
+  colorRef?: (index: number) => string,
 ): RowGradients {
   const { width, height, indices } = image;
   const gradients: string[] = new Array(height);
   const stopCounts: number[] = new Array(height);
+
+  // How a palette index is referenced in a stop. By default every color is a
+  // custom property; callers can override to inline some colors as literals.
+  const ref = colorRef ?? ((i: number) => `var(--${cssVarPrefix}-${i})`);
 
   for (let y = 0; y < height; y++) {
     const rowOffset = y * width;
@@ -39,12 +44,10 @@ export function buildRowGradients(
         n === width - 1 || indices[rowOffset + n + 1]! !== cur;
 
       if (prevDiffers) {
-        stops.push(`var(--${cssVarPrefix}-${cur}) calc(var(--pixel-width) * ${n})`);
+        stops.push(`${ref(cur)} calc(var(--pixel-width) * ${n})`);
       }
       if (nextDiffers) {
-        stops.push(
-          `var(--${cssVarPrefix}-${cur}) calc(var(--pixel-width) * ${n + 1})`,
-        );
+        stops.push(`${ref(cur)} calc(var(--pixel-width) * ${n + 1})`);
       }
     }
 

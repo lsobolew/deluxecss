@@ -30,6 +30,8 @@ Options:
       --no-will-change        Omit the will-change hint (frames mode)
       --bg-in-keyframes       Deliver background-image via a held @keyframes rule
                               (compositing-layer promotion; single or per-layer)
+      --inline-static-colors  Inline non-animating colors as literals; keep only
+                              animating colors as --color-* variables (palette anim)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
@@ -63,6 +65,7 @@ async function main(): Promise<void> {
       "max-frames": { type: "string" },
       "no-will-change": { type: "boolean" },
       "bg-in-keyframes": { type: "boolean" },
+      "inline-static-colors": { type: "boolean" },
       duration: { type: "string" },
       resize: { type: "string" },
       "single-element": { type: "boolean" },
@@ -104,6 +107,7 @@ async function main(): Promise<void> {
     maxFrames: num(values["max-frames"]),
     willChange: values["no-will-change"] ? false : undefined,
     backgroundInKeyframes: values["bg-in-keyframes"],
+    inlineStaticColors: values["inline-static-colors"],
     sizing: values.sizing as Options["sizing"],
     layerChunkSize: num(values.chunk),
     maxStopsPerLayer: num(values["max-stops"]),
