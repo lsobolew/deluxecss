@@ -40,6 +40,21 @@ Full-width strips (1-D, what the library does): `256×8`, `256×16`, `256×32`,
 There's no universal "best" — it depends on resolution, how much of the frame
 moves, and the machine. This harness lets you measure it for a given clip.
 
+## Observed
+
+Measured on this clip: the **smallest tiles perform worst** (`32×32` — the
+per-tile DOM / `@keyframes` / compositing-layer overhead dominates), while the
+**larger tiles are all roughly flat** — no meaningful difference between full-
+width strips of 16–72 rows and the single whole-image tile. That matches Chrome
+rasterizing in ~256px internal tiles: once a CSS tile is "big enough," slicing it
+further only adds overhead without helping paint.
+
+**Takeaway:** don't tile finely. The library's default — full-width strips of
+`layerChunkSize` (50) rows — sits comfortably in the flat zone. The only reason to
+change tiling is to stay under the single-element paint ceiling (split just
+enough to render) or to confine repaints to where motion is (the `overlay` mode),
+not to chase a smaller tile.
+
 ## Sketch (simplified)
 
 ```html
