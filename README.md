@@ -204,7 +204,7 @@ pixel-css frame1.png frame2.png frame3.png frame4.png \
 See [`examples/stan`](examples/stan) — a 4-frame sprite animation built
 this way — and [`examples/matrix-frames`](examples/matrix-frames), a live-action
 film clip (a few seconds, 256px, high color fidelity, multi-layer split across
-files). Frame-by-frame film is inherently heavy — ~66 MB there — so it's a stress
+files). Frame-by-frame film is inherently heavy — ~193 MB there — so it's a stress
 test, not a recommended use; pixel art and
 low-color animation are where this shines.
 

@@ -4,14 +4,14 @@ A few seconds of the Matrix clip as pure CSS, frame by frame, at high colour
 fidelity (up to 256 colours — not the tight palette the other examples use). This
 is the "how far does frames mode go?" demo: it works, but you feel every cost.
 
-Generated (recipe committed, the ~66 MB of CSS is not — run `gen.mjs`):
+Generated (recipe committed, the ~193 MB of CSS is not — run `gen.mjs`):
 
 ```
 node examples/matrix-frames/gen.mjs
 ```
 
-72 frames (~3 s @ 24 fps), 256px wide, 256 colours, multi-layer, split into 4
-files. **≈66 MB raw → ≈3.8 MB gzipped.**
+216 frames (9 s @ 24 fps), 256px wide, 256 colours, multi-layer, split into 12
+files. **≈193 MB raw → ≈12 MB gzipped.**
 
 ## What sets the ceiling
 

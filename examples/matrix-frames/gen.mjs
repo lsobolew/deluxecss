@@ -10,14 +10,14 @@ import { sizeText, CLI } from "../../scripts/example-utils.mjs";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const framesDir = fileURLToPath(new URL("../../../10m/", import.meta.url));
-const N = 72;            // ~3 s at 24 fps
+const N = 216;           // 9 s at 24 fps
 const TARGET_MB = 25;
 
 const frames = Array.from({ length: N }, (_, i) => `${framesDir}matrix_${String(i).padStart(3, "0")}.png`);
 const full = `${dir}/_full.css`, meta = `${dir}/_full.json`;
 
 execFileSync("node", [CLI, ...frames,
-  "--animate", "--anim-mode", "frames", "--duration", "3",
+  "--animate", "--anim-mode", "frames", "--duration", "9",
   "--resize", "256", "--max-colors", "256", // high fidelity, not the usual tight palette
   "--inline-palette", "--chunk", "20",
   "-o", full, "--meta", meta], { stdio: "inherit" });
