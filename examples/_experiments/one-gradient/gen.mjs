@@ -100,7 +100,10 @@ const html = `<!doctype html>
   .strip {
     -webkit-box-decoration-break: slice;
     box-decoration-break: slice;
-    color: transparent;                    /* hide the filler glyphs */
+    color: transparent;                    /* hide the filler glyphs visually */
+    -webkit-user-select: none;
+    user-select: none;                     /* can't be selected or copied */
+    pointer-events: none;                  /* no cursor/hit-testing on the text */
     background-image: ${oneGradient};
     background-size: calc(var(--u) * ${W * H}) ${rowH}px;
     background-repeat: no-repeat;
@@ -110,11 +113,11 @@ const html = `<!doctype html>
   <div class="row">
     <figure>
       <figcaption>(A) one <code>linear-gradient</code> per row<br>(${H} gradients)</figcaption>
-      <div class="per-row"></div>
+      <div class="per-row" role="img" aria-label="Mario, drawn in CSS from one linear-gradient per row"></div>
     </figure>
     <figure>
       <figcaption>(B) ONE <code>linear-gradient</code> (${stops.length} stops)<br>wrapping inline text, <code>box-decoration-break: slice</code></figcaption>
-      <div class="box"><span class="strip">${filler}</span></div>
+      <div class="box" role="img" aria-label="Mario, drawn in CSS from a single linear-gradient"><span class="strip" aria-hidden="true">${filler}</span></div>
     </figure>
   </div>
 </body></html>
