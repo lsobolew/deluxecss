@@ -79,7 +79,48 @@
         margin-left: 6px;
         vertical-align: middle;
       }
+
+      /* --- Mario vs the pure-CSS Mario/Luigi swap --- */
+      .stage {
+        display: flex;
+        gap: 48px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .cap {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #7f8ea3;
+        margin-bottom: 10px;
+      }
+      /* the pure-CSS sprite: same generated mario.css, sized with plain width */
+      .mario-swap .hero {
+        width: 240px;
+      }
+      .hero-pick {
+        display: flex;
+        gap: 18px;
+        margin-top: 14px;
+        font-size: 14px;
+      }
+      .hero-pick label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+      }
+      /* Pure-CSS palette swap — no JavaScript. When the Luigi radio is checked,
+         :has() lets the wrapper override Mario's signature red (--color-1) with
+         Luigi green; the sprite recolors instantly. */
+      .mario-swap:has(input.luigi:checked) .hero {
+        --color-1: #1fa81f;
+      }
     </style>
+    <!-- The pure-CSS Mario/Luigi below needs the generated stylesheet in the
+         light DOM. The <pixel-image> widget loads it into its own shadow root,
+         so the two never clash. -->
+    <link rel="stylesheet" href="assets/mario.css" />
   </head>
   <body>
     <h1>pixel-css — live-controllable CSS pixel art</h1>
@@ -91,12 +132,32 @@
     </p>
 
     <div class="stage">
-      <pixel-image
-        css="assets/mario.css"
-        meta="assets/mario.json"
-        scale="20"
-        controls
-      ></pixel-image>
+      <div>
+        <div class="cap">Widget (JS) — drag the pickers</div>
+        <pixel-image
+          css="assets/mario.css"
+          meta="assets/mario.json"
+          scale="20"
+          controls
+        ></pixel-image>
+      </div>
+
+      <div>
+        <div class="cap">Pure CSS — no JavaScript</div>
+        <div class="mario-swap">
+          <div
+            class="pixel-image palette hero"
+            role="img"
+            aria-label="Mario / Luigi sprite, recolored with pure CSS"
+          >
+            <div class="pixel-image__layer"></div>
+          </div>
+          <div class="hero-pick" role="radiogroup" aria-label="Choose hero">
+            <label><input type="radio" name="hero" class="mario" checked /> Mario</label>
+            <label><input type="radio" name="hero" class="luigi" /> Luigi</label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <h2>Animations</h2>
