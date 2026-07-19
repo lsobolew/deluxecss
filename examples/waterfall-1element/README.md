@@ -42,6 +42,27 @@ renders it. (`--pixel-height` is still a variable, but it appears only per row,
 far under the limit.) The CLI warns if any generated `background-image` value
 would cross the ~50k-var() limit.
 
+## Dead end: one variable per frame
+
+A tempting way to split single-element output across files: put each frame's
+gradient list in its own custom property in its own file, and have the main
+`@keyframes` only reference them —
+
+```css
+/* frame-0.css */  :root { --f-0: linear-gradient(...), /* 286 rows */; }
+/* main.css   */   @keyframes p { 0% { background-image: var(--f-0); } 25% { background-image: var(--f-1); } }
+```
+
+Tested: **it renders blank in Chrome.** A *small* gradient in a variable animates
+fine, but Blink applies a far tighter limit to the tokens produced by *custom-
+property substitution* than to a value written literally. The exact same frame
+list renders when inlined straight into the keyframe (this example) but is
+dropped when pulled in through `var()` — so a full frame's worth of stops blows
+the substitution cap and the element paints nothing. Splitting a single-element
+animation across files this way is not possible; only multi-layer output splits
+(see `waterfall-50frames`), because there each layer is a separate, literal
+`@keyframes` rule.
+
 ## Pros / cons
 
 - **Pro:** no extra DOM, no palette, closest to the raw "image as one CSS value"
