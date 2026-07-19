@@ -238,7 +238,9 @@ function convertFrameSwap(
 
   const layerCount = perFrameLayers[0]!.length;
 
-  // 4. Static base render = frame 0 (also the reduced-motion fallback).
+  // 4. Palette + container + layer scaffolding only — the background itself is
+  //    delivered by the @keyframes below (background-image AND -position together,
+  //    the `10m` technique), so no static frame-0 background is painted.
   const baseImage: IndexedImage = {
     width,
     height,
@@ -250,10 +252,16 @@ function convertFrameSwap(
     baseImage,
     perFrameLayers[0]!,
     opts,
+    undefined,
+    /* paintBackground */ false,
   );
   const meta = buildMeta(baseImage, perFrameLayers[0]!, opts, layerClass);
 
-  // 5. Per-frame keyframes swapping background-image (step-end, no tween).
+  // 5. Per-frame keyframes swapping background-image AND background-position
+  //    together (step-end, no tween). Declaring the position inside the keyframe
+  //    is what binds every stacked layer — animating background-image alone would
+  //    paint only the first layer. The layout is fixed, so the position list is
+  //    the same in every stop (taken from frame 0).
   const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
   const duration = options.duration ?? totalDelay / 1000;
   const willChange = opts.willChange
@@ -270,9 +278,16 @@ function convertFrameSwap(
     }
   }
 
-  const keyframesFor = (name: string, bgFor: (f: number) => string): string => {
+  const keyframesFor = (
+    name: string,
+    bgFor: (f: number) => string,
+    position: string,
+  ): string => {
     const stops = framePct
-      .map((pct, f) => `  ${pct}% { background-image: ${bgFor(f)}; }`)
+      .map(
+        (pct, f) =>
+          `  ${pct}% { background-image: ${bgFor(f)}; background-position: ${position}; }`,
+      )
       .join("\n");
     return `@keyframes ${name} {\n${stops}\n}`;
   };
@@ -286,7 +301,11 @@ function convertFrameSwap(
       `\n  animation: ${name} ${dur} step-end infinite;` +
       willChange +
       `\n}\n\n` +
-      keyframesFor(name, (f) => perFrameLayers[f]![0]!.backgroundImage) +
+      keyframesFor(
+        name,
+        (f) => perFrameLayers[f]![0]!.backgroundImage,
+        perFrameLayers[0]![0]!.backgroundPosition,
+      ) +
       "\n";
   } else {
     for (let i = 0; i < layerCount; i++) {
@@ -296,7 +315,11 @@ function convertFrameSwap(
         `\n  animation: ${name} ${dur} step-end infinite;` +
         willChange +
         `\n}\n\n` +
-        keyframesFor(name, (f) => perFrameLayers[f]![i]!.backgroundImage) +
+        keyframesFor(
+          name,
+          (f) => perFrameLayers[f]![i]!.backgroundImage,
+          perFrameLayers[0]![i]!.backgroundPosition,
+        ) +
         "\n";
     }
   }

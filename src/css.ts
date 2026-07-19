@@ -23,6 +23,13 @@ export function buildCss(
    * set to skip colors that were inlined as literals in the gradients.
    */
   paletteIndices?: Set<number>,
+  /**
+   * Whether to paint the static `background-image`/`background-position` on the
+   * element(s). Pass false when the caller animates the background via
+   * `@keyframes` (frames mode with position-in-keyframe) — the element then only
+   * gets sizing, repeat and background-size, and the layer slots stay empty.
+   */
+  paintBackground = true,
 ): CssParts {
   const { width, height, colors } = image;
   const {
@@ -92,11 +99,13 @@ export function buildCss(
         image: layer.backgroundImage,
         position: layer.backgroundPosition,
       });
-    } else {
+    } else if (paintBackground) {
       containerBody +=
         `\n  background-image: ${layer.backgroundImage};` +
         `\n  background-position: ${layer.backgroundPosition};`;
     }
+    // paintBackground === false: caller animates background-image + -position
+    // via @keyframes (frames mode); leave the element with only size/repeat.
   }
   blocks.push(`${selector} {\n${containerBody}\n}`);
 
@@ -139,7 +148,7 @@ export function buildCss(
           image: layer.backgroundImage,
           position: layer.backgroundPosition,
         });
-      } else {
+      } else if (paintBackground) {
         blocks.push(
           `${selector} > .${layerClass}:nth-child(${i + 1}) {\n` +
             `  background-image: ${layer.backgroundImage};\n` +

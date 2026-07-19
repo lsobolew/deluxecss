@@ -145,8 +145,11 @@ That's it — the waterfall loops forever, in pure CSS. See
   rasterizes it **once and caches** it, and `will-change: background-image`
   promotes the element to its own compositing layer — so playback runs on the
   browser's animation pipeline instead of re-rasterizing gradients every tick.
-  The tradeoff is size: the CSS holds every frame's full gradient set, so it is
-  much larger. Use `--resize` and `--max-frames` to keep it in check.
+  (`background-image` and `background-position` are animated *together* in each
+  keyframe so every stacked layer binds — animating the image alone paints only
+  the first layer.) The tradeoff is size: the CSS holds every frame's full
+  gradient set, so it is much larger. Use `--resize` and `--max-frames` to keep
+  it in check.
 
 - **`overlay`** — paint the pixels that never change **once** as a static
   background on the element, then animate only a separate, mostly-transparent

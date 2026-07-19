@@ -98,8 +98,14 @@ describe("convertAnimated", () => {
       // a single keyframes rule, driven with step-end
       expect((css.match(/@keyframes/g) ?? []).length).toBe(1);
       expect(css).toContain("step-end infinite");
-      // each stop swaps background-image
+      // each stop swaps background-image AND background-position together
+      // (position-in-keyframe binds every layer; no static frame-0 workaround)
       expect((css.match(/% \{ background-image:/g) ?? []).length).toBe(2);
+      expect(
+        (css.match(/background-image:[^}]*background-position:/g) ?? []).length,
+      ).toBe(2);
+      const beforeKeyframes = css.split("@keyframes")[0]!;
+      expect(beforeKeyframes).not.toContain("background-image:");
       // palette stays controllable (colors referenced by var, not literal)
       expect(css).toMatch(/--color-0:/);
       expect(css).toContain("var(--color-");
