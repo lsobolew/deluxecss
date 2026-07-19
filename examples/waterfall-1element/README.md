@@ -1,50 +1,58 @@
-# Waterfall — one element, frame-by-frame (and where it breaks)
+# Waterfall — one element, frame-by-frame (the "10m" technique)
 
 The full 640×286 waterfall animated **on a single element**, frame by frame —
 the original `10m` idea. Every frame is 286 stacked row-gradients, and one
 `@keyframes` swaps the whole `background-image` (and `background-position`) per
 frame with `step-end`. No child layers, and — with `--inline-palette` — no
-`--color-*` variables: colors are literals.
+`--color-*` variables: colors are literals and the per-stop unit is inlined too,
+so the gradients contain **no `var()` at all**.
 
-> ⚠️ **Renders in Safari, blank in Chrome.** This page is a *limit demo*, not a
-> shippable technique. See below for exactly why.
+Renders in Chrome **and** Safari.
 
-## The specific cause (measured)
+## The bug this dodges — Chrome's var() substitution limit
 
-Chrome's engine, **Blink, caps a single CSS property value at 2²¹ =
-2,097,152 characters (~2 MiB)**. Past that, Blink silently drops the whole
-declaration. Single-element output packs *all* 286 rows into **one**
-`background-image` value (~5 MiB here), so Chrome throws the `background-image`
-away and the element paints nothing. WebKit (Safari) has no such cap, so it
-renders fine — which is why this looked like it "worked" in the original
-experiment.
+A single-element image packs every row's stops into **one** `background-image`
+value. Written the normal way, each stop carries a `var(--pixel-width)` (and a
+`var(--color-*)`), so a wide image reaches **tens of thousands of `var()`
+references in that one value**. Past roughly **50,000 var() references per
+property value, Blink (Chrome) stops substituting** — it discards the whole
+declaration and the element renders **blank**. WebKit (Safari) has no such limit,
+which is why the naive version *looked* like it worked.
 
-Bisected on this image (`--single-element`, colors inlined):
+Measured on this image (`--single-element`, one value per frame):
 
-| width | rows | longest `background-image` value | Chrome |
-|------:|-----:|---------------------------------:|:------:|
-| 256 | 114 | 1,377,202 chars | ✅ renders |
-| 320 | 143 | 2,043,863 chars | ✅ renders |
-| **—** | **—** | **2,097,152 (2²¹) — the cap** | — |
-| 328 | 147 | 2,099,615 chars | ❌ blank |
-| 384 | 172 | 2,444,936 chars | ❌ blank |
-| 640 | 286 | ~4,900,000 chars | ❌ blank |
+| per-value `var()` refs | Chrome |
+|-----------------------:|:------:|
+| ~1,400 (this example, `--inline-palette`) | ✅ renders |
+| 51,414 | ✅ renders |
+| 52,808 | ❌ blank |
+| ~103,000 (640px, palette in vars) | ❌ blank |
 
-The boundary sits exactly on 2²¹. It is **not** the element size, the row/layer
-count, the palette variables, or `background-position` (a shorter value that
-clears the cap for longer) — it is the length of the single `background-image`
-value.
+It is **not** the CSS file size, the value length, the element size, the layer
+count, `container-type`, or `background-position` — only the number of `var()`
+references Blink must resolve inside a single value.
 
-## Why multi-layer is the answer
+## The fix
 
-Splitting the rows across several `<div>` layers keeps each element's
-`background-image` value well under 2 MiB, so Chrome renders it. That is exactly
-what `waterfall-frames` (and every other shipped animation) does. The CLI now
-prints a warning when a generated `background-image` value crosses the 2²¹ cap.
+`--inline-palette` writes colors as literals **and** inlines the per-stop unit as
+`calc(100% / W * n)` instead of `var(--pixel-width) * n`. `background-size: 100%`
+stretches each row-gradient to the element width, so `100% / W` stays correct at
+any size — the output is fully responsive yet contains no `var()`, so Chrome
+renders it. (`--pixel-height` is still a variable, but it appears only per row,
+far under the limit.) The CLI warns if any generated `background-image` value
+would cross the ~50k-var() limit.
 
-## Technique (for reference)
+## Pros / cons
+
+- **Pro:** no extra DOM, no palette, closest to the raw "image as one CSS value"
+  idea; renders in both engines; smooth once parsed.
+- **Con:** a big stylesheet (~20 MB for 4 frames at 640px) and a slow first
+  paint. For anything you ship, prefer the multi-layer `waterfall-frames`, which
+  splits the rows across elements (each value stays tiny) and is far lighter.
+
+## Technique
 
 - `animationMode: "frames"`, `singleElement: true`, `inlinePalette: true`.
 - One element, `background-size: 100% var(--pixel-height)`, 286 row-gradients.
 - `@keyframes` swaps `background-image` + `background-position` together
-  (`step-end`), with an explicit terminal `100%` stop (the Safari fix).
+  (`step-end`), with an explicit terminal `100%` stop (the Safari step-end fix).

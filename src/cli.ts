@@ -158,22 +158,24 @@ async function main(): Promise<void> {
   }
   const { css, meta, html } = result;
 
-  // Blink (Chrome) discards any single CSS property value longer than 2^21
-  // (~2 MiB) characters — the declaration is dropped and the element renders
-  // blank. WebKit (Safari) has no such cap. Single-element output packs every
-  // row into one `background-image` value, so it can blow past this; warn rather
-  // than let it fail silently in Chrome only.
-  const BLINK_VALUE_CAP = 2 ** 21; // 2,097,152
-  let maxValueLen = 0;
+  // Chrome/Blink stops substituting custom properties past roughly 50k `var()`
+  // references in a single property value: it drops the whole declaration and
+  // the element renders blank (WebKit is unaffected). Wide single-element output
+  // packs every row's stops — each a `var(--pixel-width)` / `var(--color-*)` —
+  // into one `background-image` value and can blow past this. `--inline-palette`
+  // makes that value var-free and fixes it. Warn rather than fail silently.
+  const BLINK_VAR_LIMIT = 50_000;
+  let maxVars = 0;
   for (const m of css.matchAll(/background-image:\s*([^;]*)/g)) {
-    if (m[1]!.length > maxValueLen) maxValueLen = m[1]!.length;
+    const n = (m[1]!.match(/var\(/g) ?? []).length;
+    if (n > maxVars) maxVars = n;
   }
-  if (maxValueLen > BLINK_VALUE_CAP) {
+  if (maxVars > BLINK_VAR_LIMIT) {
     process.stderr.write(
-      `warning: a background-image value is ${maxValueLen.toLocaleString("en-US")} chars, ` +
-        `over Chrome/Blink's ${BLINK_VALUE_CAP.toLocaleString("en-US")}-char (2^21) cap for a single CSS value. ` +
-        `Chrome will drop it and render blank (Safari is unaffected). ` +
-        `Drop --single-element for multi-layer output, or reduce --resize/--max-frames.\n`,
+      `warning: a background-image value has ${maxVars.toLocaleString("en-US")} var() references, ` +
+        `over the ~${BLINK_VAR_LIMIT.toLocaleString("en-US")} Chrome/Blink substitutes per value. ` +
+        `Chrome will drop the declaration and render blank (Safari is unaffected). ` +
+        `Add --inline-palette (var-free gradients), or drop --single-element for multi-layer output.\n`,
     );
   }
 

@@ -46,6 +46,18 @@ describe("convert (full pipeline)", () => {
     expect(css).not.toContain("@property");
   });
 
+  it("inlinePalette inlines the per-stop unit so the gradients hold no var()", () => {
+    // Blink stops substituting past ~50k var() in one value; single-element
+    // output must therefore keep var() out of the (huge) background-image value.
+    const { css } = convert(checker, { inlinePalette: true });
+    expect(css).toContain("calc(100% / 2 *"); // stop unit inlined, width = 2
+    expect(css).not.toContain("var(--pixel-width)");
+    // every background-image value (the huge one) is free of var()
+    for (const m of css.matchAll(/background-image:\s*([^;]*)/g)) {
+      expect(m[1]).not.toContain("var(");
+    }
+  });
+
   it("honors sizing: percent", () => {
     const { css } = convert(checker, { sizing: "percent" });
     expect(css).toContain("--pixel-width: calc(100% / 2);");

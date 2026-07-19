@@ -24,6 +24,17 @@ export function buildRowGradients(
   image: IndexedImage,
   cssVarPrefix: string,
   colorRef?: (index: number) => string,
+  /**
+   * The per-stop horizontal unit (one pixel wide). Defaults to the
+   * `--pixel-width` custom property. Pass a literal expression to inline it: with
+   * one stop per run boundary a wide single-element image references this
+   * hundreds of thousands of times, and Chrome/Blink stops substituting a custom
+   * property past a per-value limit (the whole `background-image` then computes
+   * to nothing and the element renders blank). A var-free unit like
+   * `calc(100% / W)` — a fraction of the gradient box, which `background-size:
+   * 100%` stretches to the element width — keeps it responsive without any var().
+   */
+  pixelWidthExpr = "var(--pixel-width)",
 ): RowGradients {
   const { width, height, indices } = image;
   const gradients: string[] = new Array(height);
@@ -44,10 +55,10 @@ export function buildRowGradients(
         n === width - 1 || indices[rowOffset + n + 1]! !== cur;
 
       if (prevDiffers) {
-        stops.push(`${ref(cur)} calc(var(--pixel-width) * ${n})`);
+        stops.push(`${ref(cur)} calc(${pixelWidthExpr} * ${n})`);
       }
       if (nextDiffers) {
-        stops.push(`${ref(cur)} calc(var(--pixel-width) * ${n + 1})`);
+        stops.push(`${ref(cur)} calc(${pixelWidthExpr} * ${n + 1})`);
       }
     }
 

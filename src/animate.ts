@@ -231,6 +231,10 @@ function convertFrameSwap(
   const frameColorRef = opts.inlinePalette
     ? (i: number) => colors[i]!
     : undefined;
+  // Inline the per-stop unit too (see rle.ts): single-element frames pack every
+  // row into one background-image value, and the var(--pixel-width) per stop
+  // would blow Chrome's per-value custom-property limit and render blank.
+  const frameStopUnit = opts.inlinePalette ? `100% / ${width}` : undefined;
   const perFrameLayers = tokenFrames.map((tokens) => {
     const indexed: IndexedImage = {
       width,
@@ -239,7 +243,12 @@ function convertFrameSwap(
       indices: toIndices(tokens),
       hasAlpha,
     };
-    const rows = buildRowGradients(indexed, opts.cssVarPrefix, frameColorRef);
+    const rows = buildRowGradients(
+      indexed,
+      opts.cssVarPrefix,
+      frameColorRef,
+      frameStopUnit,
+    );
     return packLayers(rows, chunkRows, Infinity); // fixed N-row chunks
   });
 
