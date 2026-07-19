@@ -327,6 +327,7 @@
   display: grid;
   width: calc(256px * var(--scale, 2));
   aspect-ratio: 256 / 114;
+  container-type: size;
   --pixel-width: calc(1px * var(--scale, 2));
   --pixel-height: calc(1px * var(--scale, 2));
   background-repeat: no-repeat;

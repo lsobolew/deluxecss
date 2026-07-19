@@ -26,7 +26,13 @@ describe("convert (full pipeline)", () => {
   it("honors sizing: percent", () => {
     const { css } = convert(checker, { sizing: "percent" });
     expect(css).toContain("--pixel-width: calc(100% / 2);");
-    expect(css).not.toContain("container-type");
+    expect(css).not.toContain("cqw"); // percent mode doesn't use container-query units
+  });
+
+  it("emits container-type: size in every sizing mode (size containment)", () => {
+    for (const sizing of ["container", "pixel", "percent"] as const) {
+      expect(convert(checker, { sizing }).css).toContain("container-type: size;");
+    }
   });
 
   it("emits @property blocks when requested", () => {

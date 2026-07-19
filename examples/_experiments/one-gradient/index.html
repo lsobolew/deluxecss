@@ -37,8 +37,14 @@
   /* (B) the experiment: ONE gradient on a wrapping inline text run.
         --u = one character advance (1ch). W chars per line, H lines. */
   .box {
+    /* content-box so aspect-ratio sizes the content area to exactly H rows and
+       padding-top adds on top of it (border-box would eat a row at the bottom) */
+    box-sizing: content-box;
+    container-type: size;                  /* size containment + query container */
+    aspect-ratio: 12 / 16;             /* height from the image's ratio */
     line-height: 12px;
-    width: calc(var(--u) * 12);         /* exactly W characters wide */
+    width: calc(var(--u) * 12);          /* exactly W characters wide */
+    padding-top: 0.5ch;                    /* nudge the clipped first line down */
     overflow: hidden;
     white-space: normal; word-break: break-all;
   }

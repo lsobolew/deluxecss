@@ -207,9 +207,13 @@ function sizingDecls(
   lines.push("  display: grid;");
   lines.push(`  width: calc(${width}px * var(--scale, ${scale}));`);
   lines.push(`  aspect-ratio: ${width} / ${height};`);
+  // Size containment in every mode: the element's size comes from width +
+  // aspect-ratio (never its contents), so this is safe and isolates the subtree
+  // from outside layout — a free perf hint. In `container` mode it also makes
+  // cqw/cqh resolve against this element.
+  lines.push("  container-type: size;");
 
   if (sizing === "container") {
-    lines.push("  container-type: size;");
     lines.push(`  --pixel-width: calc(100cqw / ${width});`);
     lines.push(`  --pixel-height: calc(100cqh / ${height});`);
   } else if (sizing === "pixel") {
