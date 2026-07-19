@@ -45,3 +45,41 @@ narrower than the strip, and it wraps" intuition — the missing ingredient was
 
 So it's a neat proof that one gradient suffices, but the per-row technique remains
 the practical default (axis-aligned, font-independent, no filler DOM).
+
+`index.html` also shows both Marios (per-row vs one-gradient) side by side at
+identical dimensions.
+
+---
+
+# Experiment #2 — performance: one gradient vs per-row, on the Matrix clip
+
+```
+node matrix-compare.mjs   # writes matrix-method1.html and matrix-method2.html
+```
+
+Both render the **same** clip (128×72, 20 frames, 16 colors, 5s loop, identical
+palette and on-screen size). Open each in a real browser and profile playback in
+DevTools (Performance panel / the FPS meter) to compare:
+
+- **`matrix-method1.html`** — ONE `linear-gradient` per frame, on a wrapping
+  inline text run (`box-decoration-break: slice`). The whole frame is a single
+  background layer that swaps per frame.
+- **`matrix-method2.html`** — one `linear-gradient` per row per frame, rows split
+  across stacked `<div>` layers (the library's `frames` mode). Many background
+  layers repaint per frame.
+
+Both files are ~2.5 MB (comparable), so differences are about *paint structure*,
+not download size.
+
+## What surfaced while building this
+
+- **Method 2 renders far more slowly than method 1** here — the per-row version
+  repaints dozens of background layers each frame; the one-gradient version
+  repaints a single layer. (Measure it yourself; headless took markedly longer to
+  paint method 2's first frame.)
+- **A multi-layer `background-image` that is *only* set inside `@keyframes` paints
+  just its first layer** — the other rows vanish. It needs a **static** multi-layer
+  `background-image` (frame 0) on the element too, so the layers/positions bind;
+  the keyframes then swap it. (The library's `frames` mode already emits that
+  static frame-0 background — this is why it works.) Method 1 sidesteps the whole
+  issue because it is a single background layer.

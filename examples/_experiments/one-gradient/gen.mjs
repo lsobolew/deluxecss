@@ -43,6 +43,9 @@ const rowWidth = W * S;
 const filler = "0".repeat(W * H); // W*H characters → wraps into H lines of W
 
 // --- Reference: one gradient PER ROW (the current technique), for comparison.
+// Uses the SAME pixel cell as method (B) — width 1ch, height rowH — so the two
+// Marios come out at identical dimensions for a side-by-side comparison.
+const rowH = Math.round(S * 0.6);
 const rowGradients = [];
 const rowPositions = [];
 for (let y = 0; y < H; y++) {
@@ -52,38 +55,38 @@ for (let y = 0; y < H; y++) {
     const c = colorAt(k);
     const prevSame = x > 0 && colorAt(k - 1) === c;
     const nextSame = x < W - 1 && colorAt(k + 1) === c;
-    if (!prevSame) rs.push(`${c} ${x * S}px`);
-    if (!nextSame) rs.push(`${c} ${(x + 1) * S}px`);
+    if (!prevSame) rs.push(`${c} calc(var(--u) * ${x})`);
+    if (!nextSame) rs.push(`${c} calc(var(--u) * ${x + 1})`);
   }
   rowGradients.push(`linear-gradient(to right, ${rs.join(", ")})`);
-  rowPositions.push(`0 ${y * S}px`);
+  rowPositions.push(`0 calc(${rowH}px * ${y})`);
 }
 
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <title>one-gradient experiment</title>
 <style>
+  :root { --u: 1ch; }
   body { margin: 0; background: #222; color: #eee; font-family: system-ui, sans-serif; }
-  figure { margin: 24px; }
-  figcaption { font-size: 13px; margin-bottom: 8px; color: #bbb; }
+  /* the ch unit only means the right thing where the monospace font applies */
+  .row { display: flex; gap: 40px; align-items: flex-start; margin: 24px;
+         font-family: monospace; font-size: ${S}px; }
+  figcaption { font-size: 13px; margin-bottom: 8px; color: #bbb; font-family: system-ui, sans-serif; }
   code { color: #9cf; }
 
-  /* (A) reference: one gradient per row */
+  /* (A) reference: one gradient per row — same cell size as (B): 1ch × ${rowH}px */
   .per-row {
-    width: ${rowWidth}px; height: ${H * S}px;
+    width: calc(var(--u) * ${W}); height: ${H * rowH}px;
     background-repeat: no-repeat;
-    background-size: 100% ${S}px;
+    background-size: 100% ${rowH}px;
     background-image: ${rowGradients.join(",\n      ")};
     background-position: ${rowPositions.join(", ")};
   }
 
   /* (B) the experiment: ONE gradient on a wrapping inline text run.
-        --u = one character advance (1ch). W chars per line, H lines.
-        line-height is set to ~1ch so the pixels come out roughly square
-        (the ch:font-size ratio is font-dependent — tuned for this monospace). */
+        --u = one character advance (1ch). W chars per line, H lines. */
   .box {
-    --u: 1ch;
-    font-family: monospace; font-size: ${S}px; line-height: ${Math.round(S * 0.6)}px;
+    line-height: ${rowH}px;
     width: calc(var(--u) * ${W});         /* exactly W characters wide */
     overflow: hidden;
     white-space: normal; word-break: break-all;
@@ -93,20 +96,21 @@ const html = `<!doctype html>
     box-decoration-break: slice;
     color: transparent;                    /* hide the filler glyphs */
     background-image: ${oneGradient};
-    background-size: calc(var(--u) * ${W * H}) ${Math.round(S * 0.6)}px;
+    background-size: calc(var(--u) * ${W * H}) ${rowH}px;
     background-repeat: no-repeat;
   }
 </style></head>
 <body>
-  <figure>
-    <figcaption>(A) reference — one <code>linear-gradient</code> per row (${H} gradients)</figcaption>
-    <div class="per-row"></div>
-  </figure>
-
-  <figure>
-    <figcaption>(B) ONE <code>linear-gradient</code> (${stops.length} stops) on a wrapping inline text run (${W}×${H} chars), <code>box-decoration-break: slice</code></figcaption>
-    <div class="box"><span class="strip">${filler}</span></div>
-  </figure>
+  <div class="row">
+    <figure>
+      <figcaption>(A) one <code>linear-gradient</code> per row<br>(${H} gradients)</figcaption>
+      <div class="per-row"></div>
+    </figure>
+    <figure>
+      <figcaption>(B) ONE <code>linear-gradient</code> (${stops.length} stops)<br>wrapping inline text, <code>box-decoration-break: slice</code></figcaption>
+      <div class="box"><span class="strip">${filler}</span></div>
+    </figure>
+  </div>
 </body></html>
 `;
 
