@@ -37,6 +37,7 @@ export function convertAnimated(
   const mode = options.animationMode ?? "palette";
   if (mode === "frames") return convertFrameSwap(input, options);
   if (mode === "overlay") return convertOverlay(input, options);
+  if (mode === "overlay-palette") return convertOverlayPalette(input, options);
 
   const { width, height, frames, delays } = input;
   const opts = resolveOptions(options);
@@ -518,6 +519,216 @@ function convertOverlay(
     `@keyframes pxc-overlay {\n${stops.join("\n")}\n}\n`;
 
   meta.animation = { mode: "overlay", duration, frames: frames.length };
+
+  const result: ConvertResult = { css, meta };
+  if (opts.emitHtml) {
+    const baseClass = meta.selector.replace(/^\./, "");
+    const layerDivs = Array.from(
+      { length: baseLayers.length },
+      () => `  <div class="${layerClass}"></div>`,
+    ).join("\n");
+    result.html =
+      `<div class="${baseClass} palette">\n${layerDivs}\n` +
+      `  <div class="${overlayClass}"></div>\n</div>`;
+  }
+  return result;
+}
+
+/**
+ * Overlay + palette hybrid: a static base painted once (stacked layers), plus a
+ * cropped overlay covering only the moving region whose colors cycle via the
+ * palette (`--color-*` value changes in the keyframes — no background-image
+ * swap). The base references only static color slots, so it never recomputes;
+ * only the small overlay references the animated slots, so only it repaints.
+ */
+function convertOverlayPalette(
+  input: DecodedFrames,
+  options: Options,
+): ConvertResult {
+  const { width, height, frames, delays } = input;
+  const opts = resolveOptions(options);
+  const maxColors = options.maxColors ?? 64;
+  const pixelCount = width * height;
+
+  const palette = buildGlobalPalette(frames, width, height, maxColors);
+  const colors = palette.map((rgb) => formatColor(rgb, opts.colorFormat));
+  const transparentIndex = colors.length;
+  colors.push("transparent");
+
+  const cache = new Map<number, number>();
+  const tokenFrames = frames.map((frame) =>
+    tokenizeFrame(frame, palette, opts.alphaThreshold, cache),
+  );
+  const slot = (t: number) => (t === TRANSPARENT_TOKEN ? transparentIndex : t);
+  const tokenToColor = (t: number): string =>
+    t === transparentIndex ? "transparent" : colors[t]!;
+
+  // Changing pixels (by source-color delta) + their bounding box.
+  const threshold = opts.changeThreshold;
+  const changing = new Uint8Array(pixelCount);
+  let minX = width,
+    maxX = -1,
+    minY = height,
+    maxY = -1;
+  for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
+    const r0 = frames[0]![i]!;
+    const g0 = frames[0]![i + 1]!;
+    const b0 = frames[0]![i + 2]!;
+    for (let f = 1; f < frames.length; f++) {
+      const fr = frames[f]!;
+      if (
+        Math.abs(fr[i]! - r0) > threshold ||
+        Math.abs(fr[i + 1]! - g0) > threshold ||
+        Math.abs(fr[i + 2]! - b0) > threshold
+      ) {
+        changing[p] = 1;
+        const x = p % width;
+        const y = (p / width) | 0;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+        break;
+      }
+    }
+  }
+  if (maxX < 0) {
+    minX = 0;
+    minY = 0;
+    maxX = 0;
+    maxY = 0;
+  }
+  const boxW = maxX - minX + 1;
+  const boxH = maxY - minY + 1;
+
+  // Group changing pixels in the box by temporal token sequence → one animated
+  // slot ("track") each, appended after the palette + transparent slots. Non-
+  // changing box pixels map to the transparent slot (base shows through).
+  const trackBase = colors.length;
+  const seqToTrack = new Map<string, number>();
+  const trackSeqs: number[][] = [];
+  const overlayIdx = new Int32Array(boxW * boxH);
+  for (let r = 0; r < boxH; r++) {
+    for (let c = 0; c < boxW; c++) {
+      const gp = (minY + r) * width + (minX + c);
+      const bp = r * boxW + c;
+      if (!changing[gp]) {
+        overlayIdx[bp] = transparentIndex;
+        continue;
+      }
+      let key = "";
+      const seq: number[] = new Array(frames.length);
+      for (let f = 0; f < frames.length; f++) {
+        const t = slot(tokenFrames[f]![gp]!);
+        seq[f] = t;
+        key += t + ",";
+      }
+      let track = seqToTrack.get(key);
+      if (track === undefined) {
+        track = trackSeqs.length;
+        seqToTrack.set(key, track);
+        trackSeqs.push(seq);
+        colors.push(tokenToColor(seq[0]!)); // frame-0 value of this animated slot
+      }
+      overlayIdx[bp] = trackBase + track;
+    }
+  }
+
+  // Static base (stacked layers so it renders at any size); changing cut out.
+  const baseIndices = new Int32Array(pixelCount);
+  for (let p = 0; p < pixelCount; p++) {
+    baseIndices[p] = changing[p] ? transparentIndex : slot(tokenFrames[0]![p]!);
+  }
+  const baseImage: IndexedImage = {
+    width,
+    height,
+    colors,
+    indices: baseIndices,
+    hasAlpha: true,
+  };
+  const baseRows = buildRowGradients(baseImage, opts.cssVarPrefix);
+  const baseLayers = packLayers(
+    baseRows,
+    opts.singleElement ? Infinity : opts.layerChunkSize,
+    opts.singleElement ? Infinity : opts.maxStopsPerLayer,
+  );
+  const { css: baseCss, layerClass } = buildCss(baseImage, baseLayers, opts);
+  const meta = buildMeta(baseImage, baseLayers, opts, layerClass);
+  const overlayClass = layerClass.replace(/__layer$/, "__overlay");
+
+  // Overlay gradients (box-local), referencing the (static or animated) slots.
+  const overlayRows = buildRowGradients(
+    { width: boxW, height: boxH, colors, indices: overlayIdx, hasAlpha: true },
+    opts.cssVarPrefix,
+  );
+  const activeRows: number[] = [];
+  for (let r = 0; r < boxH; r++) {
+    for (let c = 0; c < boxW; c++) {
+      if (changing[(minY + r) * width + minX + c]) {
+        activeRows.push(r);
+        break;
+      }
+    }
+  }
+  const overlayBg = activeRows.map((r) => overlayRows.gradients[r]!).join(", ");
+  const overlayPosition = activeRows
+    .map((r) => `0 calc(var(--pixel-height) * ${r})`)
+    .join(", ");
+
+  // Palette keyframes: one per animated track (only those that actually change).
+  const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
+  const duration = options.duration ?? totalDelay / 1000;
+  const dur = `var(--pixel-anim-duration, ${duration}s)`;
+  const animNames: string[] = [];
+  const kfBlocks: string[] = [];
+  trackSeqs.forEach((seq, track) => {
+    if (isConstant(seq)) return;
+    const idx = trackBase + track;
+    const name = `pxc-${idx}`;
+    animNames.push(name);
+    const kfStops: string[] = [];
+    let elapsed = 0;
+    let prev: string | null = null;
+    for (let f = 0; f < seq.length; f++) {
+      const color = tokenToColor(seq[f]!);
+      if (color !== prev) {
+        const pct = f === 0 ? 0 : round((elapsed / totalDelay) * 100);
+        kfStops.push(`  ${pct}% { --${opts.cssVarPrefix}-${idx}: ${color}; }`);
+        prev = color;
+      }
+      elapsed += delays[f] ?? 0;
+    }
+    kfBlocks.push(`@keyframes ${name} {\n${kfStops.join("\n")}\n}`);
+  });
+
+  let css = baseCss + "\n";
+  css += `\n${opts.selector} { position: relative; }\n`;
+  // The animation (palette cycling) lives on the container; only the overlay's
+  // gradients reference the animated slots, so only the overlay repaints.
+  if (animNames.length > 0) {
+    const list = animNames.map((n) => `${n} ${dur} step-end infinite`).join(", ");
+    css += `\n${opts.selector} { animation: ${list}; }\n`;
+  }
+  css +=
+    `\n${opts.selector} > .${overlayClass} {` +
+    `\n  position: absolute;` +
+    `\n  left: calc(var(--pixel-width) * ${minX});` +
+    `\n  top: calc(var(--pixel-height) * ${minY});` +
+    `\n  width: calc(var(--pixel-width) * ${boxW});` +
+    `\n  height: calc(var(--pixel-height) * ${boxH});` +
+    `\n  background-repeat: no-repeat;` +
+    `\n  background-size: 100% var(--pixel-height);` +
+    `\n  background-position: ${overlayPosition};` +
+    `\n  background-image: ${overlayBg};` +
+    `\n}\n`;
+  if (kfBlocks.length > 0) css += "\n" + kfBlocks.join("\n\n") + "\n";
+
+  meta.animation = {
+    mode: "overlay-palette",
+    duration,
+    frames: frames.length,
+    animatedSlots: animNames.length,
+  };
 
   const result: ConvertResult = { css, meta };
   if (opts.emitHtml) {

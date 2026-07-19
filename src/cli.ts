@@ -28,6 +28,8 @@ Options:
                                   promoted; larger CSS)
                                 overlay: static base + a mostly-transparent
                                   overlay that animates only the changing pixels
+                                overlay-palette: overlay, but the moving region
+                                  cycles the palette (only --color-* values change)
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --change-threshold <n>  overlay: min per-channel color delta (0-255) for a
                               pixel to count as animated (default 16; filters noise)

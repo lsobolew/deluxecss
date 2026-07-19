@@ -110,8 +110,12 @@ export interface Options {
    *   and animate only a mostly-transparent overlay layer that defines just the
    *   changing pixels (frame-swapped). The browser only repaints the small moving
    *   region each frame.
+   * - `overlay-palette`: like `overlay`, but the moving region cycles its palette
+   *   (`--color-*` value changes in the keyframes) instead of swapping the whole
+   *   background. The static base references only static color slots (so it never
+   *   recomputes); only the small overlay references the animated slots.
    */
-  animationMode?: "palette" | "frames" | "overlay";
+  animationMode?: "palette" | "frames" | "overlay" | "overlay-palette";
 
   /**
    * Animation only: sample the source down to at most this many frames (evenly
@@ -190,7 +194,7 @@ export interface Meta {
   /** Present only for animated conversions. */
   animation?: {
     /** Which CSS strategy was used. */
-    mode: "palette" | "frames" | "overlay";
+    mode: "palette" | "frames" | "overlay" | "overlay-palette";
     /** Total loop duration in seconds. */
     duration: number;
     /** Number of frames emitted (after any `maxFrames` sampling). */
