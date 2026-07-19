@@ -142,6 +142,15 @@ const keyframes = (name, frameBgs) => {
 
 const filler = "0".repeat(PX);
 
+// On-page FPS meter (measure in a real browser; headless virtual-time isn't representative).
+const meter = `
+  <div id="fps" style="position:fixed;top:8px;right:12px;z-index:10;font:600 16px monospace;color:#0f0;background:#000a;padding:4px 8px;border:1px solid #0f0;border-radius:4px">– fps</div>
+  <script>
+    let last=performance.now(),count=0,min=Infinity,el=document.getElementById('fps');
+    function loop(now){count++;const dt=now-last;if(dt>=500){const v=Math.round(count*1000/dt);min=Math.min(min,v);el.textContent=v+' fps (min '+(min===Infinity?'–':min)+')';count=0;last=now;}requestAnimationFrame(loop);}
+    requestAnimationFrame(loop);
+  </script>`;
+
 const doc1 = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <title>Matrix — method 1: ONE gradient per frame</title>
@@ -163,6 +172,7 @@ const doc1 = `<!doctype html>
   ${keyframes("m1", m1Frames)}
 </style></head>
 <body>
+  ${meter}
   <h1>Method 1 — ONE linear-gradient per frame (box-decoration-break: slice), ${N} frames @ ${DURATION}s</h1>
   <div class="box"><span class="strip">${filler}</span></div>
 </body></html>
@@ -206,6 +216,7 @@ const doc2 = `<!doctype html>
 ${m2LayerCss}
 </style></head>
 <body>
+  ${meter}
   <h1>Method 2 — one linear-gradient per row (${H}/frame, ${layerCount} layers), ${N} frames @ ${DURATION}s</h1>
   <div class="img">${layerDivs}</div>
 </body></html>
