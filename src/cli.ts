@@ -158,6 +158,25 @@ async function main(): Promise<void> {
   }
   const { css, meta, html } = result;
 
+  // Blink (Chrome) discards any single CSS property value longer than 2^21
+  // (~2 MiB) characters — the declaration is dropped and the element renders
+  // blank. WebKit (Safari) has no such cap. Single-element output packs every
+  // row into one `background-image` value, so it can blow past this; warn rather
+  // than let it fail silently in Chrome only.
+  const BLINK_VALUE_CAP = 2 ** 21; // 2,097,152
+  let maxValueLen = 0;
+  for (const m of css.matchAll(/background-image:\s*([^;]*)/g)) {
+    if (m[1]!.length > maxValueLen) maxValueLen = m[1]!.length;
+  }
+  if (maxValueLen > BLINK_VALUE_CAP) {
+    process.stderr.write(
+      `warning: a background-image value is ${maxValueLen.toLocaleString("en-US")} chars, ` +
+        `over Chrome/Blink's ${BLINK_VALUE_CAP.toLocaleString("en-US")}-char (2^21) cap for a single CSS value. ` +
+        `Chrome will drop it and render blank (Safari is unaffected). ` +
+        `Drop --single-element for multi-layer output, or reduce --resize/--max-frames.\n`,
+    );
+  }
+
   if (values.out) {
     await writeFile(values.out, css, "utf8");
     const anim = meta.animation

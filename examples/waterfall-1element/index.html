@@ -6,7 +6,8 @@
   body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0f14}
   /* The whole 640×286 animation lives on this single element's background —
      286 row-gradients per frame, swapped in @keyframes (the "10m" technique).
-     Heavy to parse (~20 MB CSS); give it a moment on first load. */
+     NOTE: renders in Safari only. Chrome/Blink drops any single CSS value over
+     2^21 chars, and this background-image is ~5 MB → blank in Chrome. See README. */
 </style>
 </head><body>
   <div class="pixel-image" role="img" aria-label="Monkey Island waterfall, frame-by-frame CSS animation on a single element"></div>
