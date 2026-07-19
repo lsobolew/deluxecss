@@ -23,6 +23,17 @@ describe("convert (full pipeline)", () => {
     expect(css).toContain("aspect-ratio: 2 / 2;");
   });
 
+  it("container mode (default) sizes the grid in cqw/cqh with no scale", () => {
+    const { css } = convert(checker); // sizing defaults to "container"
+    expect(css).toContain("--pixel-width: calc(100cqw / 2);");
+    expect(css).toContain("--pixel-height: calc(100cqh / 2);");
+    // no scale factor and no pixel maths anywhere — fully responsive
+    expect(css).not.toContain("--scale");
+    // width is just an overridable default at native size, capped to the parent
+    expect(css).toContain("width: 2px;");
+    expect(css).toContain("max-width: 100%;");
+  });
+
   it("honors sizing: percent", () => {
     const { css } = convert(checker, { sizing: "percent" });
     expect(css).toContain("--pixel-width: calc(100% / 2);");

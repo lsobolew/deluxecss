@@ -9,7 +9,7 @@
   ],
   "layerCount": 1,
   "chunkSize": 50,
-  "scale": 20,
+  "scale": 1,
   "cssVarPrefix": "color",
   "selector": ".pixel-image",
   "layerClass": "pixel-image__layer",

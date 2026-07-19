@@ -242,7 +242,18 @@ export class PixelImage extends HTMLElement {
   private applyScale(): void {
     const scale = this.getAttribute("scale");
     const target = this.stage ?? this;
-    if (scale !== null) target.style.setProperty("--scale", scale);
+    if (scale === null) return;
+    // Keep `--scale` for CSS generated in pixel/percent mode (it drives the cell
+    // size there). For container mode the stylesheet has no `--scale`; the box is
+    // sized purely by its width, so set an explicit width = nativeWidth × scale.
+    // Setting both is harmless: an explicit width also overrides pixel mode's
+    // `calc(width × --scale)` to the exact same value.
+    target.style.setProperty("--scale", scale);
+    const w = this._meta?.width;
+    const n = Number(scale);
+    if (w && Number.isFinite(n) && n > 0) {
+      target.style.width = `${w * n}px`;
+    }
   }
 
   /** The current palette as a CSS rule. */

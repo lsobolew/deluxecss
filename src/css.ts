@@ -205,12 +205,22 @@ function sizingDecls(
 ): string {
   const lines: string[] = [];
   lines.push("  display: grid;");
-  lines.push(`  width: calc(${width}px * var(--scale, ${scale}));`);
+  // Container mode is fully responsive: the pixel grid is expressed in cqw/cqh
+  // (below), so there is no scale factor and no pixel maths in the gradients.
+  // The width here is just an overridable default at the image's native size —
+  // set any `width` (px, %, vw, …) and the art fills it, height following the
+  // aspect-ratio. Other modes keep the `--scale` zoom multiplier.
+  if (sizing === "container") {
+    lines.push(`  width: ${width}px;`);
+    lines.push(`  max-width: 100%;`);
+  } else {
+    lines.push(`  width: calc(${width}px * var(--scale, ${scale}));`);
+  }
   lines.push(`  aspect-ratio: ${width} / ${height};`);
   // Size containment in every mode: the element's size comes from width +
   // aspect-ratio (never its contents), so this is safe and isolates the subtree
-  // from outside layout — a free perf hint. In `container` mode it also makes
-  // cqw/cqh resolve against this element.
+  // from outside layout — a free perf hint. In `container` mode it is also what
+  // makes cqw/cqh resolve against this element for the child layers.
   lines.push("  container-type: size;");
 
   if (sizing === "container") {

@@ -22,11 +22,12 @@
 
 .pixel-image {
   display: grid;
-  width: calc(44px * var(--scale, 6));
+  width: 44px;
+  max-width: 100%;
   aspect-ratio: 44 / 56;
   container-type: size;
-  --pixel-width: calc(1px * var(--scale, 6));
-  --pixel-height: calc(1px * var(--scale, 6));
+  --pixel-width: calc(100cqw / 44);
+  --pixel-height: calc(100cqh / 56);
 }
 
 .pixel-image > .pixel-image__layer {
