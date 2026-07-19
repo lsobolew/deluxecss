@@ -41,6 +41,8 @@ Options:
                               (compositing-layer promotion; single or per-layer)
       --inline-static-colors  Inline non-animating colors as literals; keep only
                               animating colors as --color-* variables (palette anim)
+      --inline-palette        Inline ALL colors as literals; emit no --color-*
+                              palette (static + frames; smaller, not recolorable)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
@@ -77,6 +79,7 @@ async function main(): Promise<void> {
       "no-will-change": { type: "boolean" },
       "bg-in-keyframes": { type: "boolean" },
       "inline-static-colors": { type: "boolean" },
+      "inline-palette": { type: "boolean" },
       duration: { type: "string" },
       resize: { type: "string" },
       "single-element": { type: "boolean" },
@@ -121,6 +124,7 @@ async function main(): Promise<void> {
     willChange: values["no-will-change"] ? false : undefined,
     backgroundInKeyframes: values["bg-in-keyframes"],
     inlineStaticColors: values["inline-static-colors"],
+    inlinePalette: values["inline-palette"],
     sizing: values.sizing as Options["sizing"],
     layerChunkSize: num(values.chunk),
     maxStopsPerLayer: num(values["max-stops"]),

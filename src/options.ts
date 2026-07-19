@@ -27,6 +27,7 @@ export const DEFAULTS: ResolvedOptions = {
   willChange: true,
   backgroundInKeyframes: false,
   inlineStaticColors: false,
+  inlinePalette: false,
 };
 
 export function resolveOptions(options: Options = {}): ResolvedOptions {

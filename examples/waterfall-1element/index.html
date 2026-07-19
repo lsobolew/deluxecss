@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>pixel-css — waterfall, one element (frames, no palette)</title>
+<link rel="stylesheet" href="waterfall.css">
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0f14}
+  /* The whole 640×286 animation lives on this single element's background —
+     286 row-gradients per frame, swapped in @keyframes (the "10m" technique).
+     Heavy to parse (~20 MB CSS); give it a moment on first load. */
+</style>
+</head><body>
+  <div class="pixel-image" role="img" aria-label="Monkey Island waterfall, frame-by-frame CSS animation on a single element"></div>
+</body></html>

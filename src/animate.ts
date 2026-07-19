@@ -225,6 +225,12 @@ function convertFrameSwap(
   //    images spread across several `<div>` layers — each stays simple enough to
   //    paint, which single-element painting cannot do at high resolution.
   const chunkRows = opts.singleElement ? Infinity : opts.layerChunkSize;
+  // inlinePalette: frames never touch the palette (each frame swaps the whole
+  // background-image), so writing literal colors and dropping the --color-* vars
+  // is safe here — it's the palette-free `10m` shape, smaller and var-free.
+  const frameColorRef = opts.inlinePalette
+    ? (i: number) => colors[i]!
+    : undefined;
   const perFrameLayers = tokenFrames.map((tokens) => {
     const indexed: IndexedImage = {
       width,
@@ -233,7 +239,7 @@ function convertFrameSwap(
       indices: toIndices(tokens),
       hasAlpha,
     };
-    const rows = buildRowGradients(indexed, opts.cssVarPrefix);
+    const rows = buildRowGradients(indexed, opts.cssVarPrefix, frameColorRef);
     return packLayers(rows, chunkRows, Infinity); // fixed N-row chunks
   });
 
@@ -253,7 +259,7 @@ function convertFrameSwap(
     baseImage,
     perFrameLayers[0]!,
     opts,
-    undefined,
+    opts.inlinePalette ? new Set<number>() : undefined,
     /* paintBackground */ false,
   );
   const meta = buildMeta(baseImage, perFrameLayers[0]!, opts, layerClass);

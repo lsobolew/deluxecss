@@ -34,6 +34,18 @@ describe("convert (full pipeline)", () => {
     expect(css).toContain("max-width: 100%;");
   });
 
+  it("inlinePalette emits literal colors and no --color-* palette", () => {
+    const { css } = convert(checker, { inlinePalette: true });
+    // colors are written straight into the gradients as literals
+    expect(css).toContain("#ff0000");
+    expect(css).toContain("#0000ff");
+    // …and there are no custom properties or palette rule at all
+    expect(css).not.toContain("var(--color-");
+    expect(css).not.toContain("--color-0:");
+    expect(css).not.toContain(".palette {");
+    expect(css).not.toContain("@property");
+  });
+
   it("honors sizing: percent", () => {
     const { css } = convert(checker, { sizing: "percent" });
     expect(css).toContain("--pixel-width: calc(100% / 2);");

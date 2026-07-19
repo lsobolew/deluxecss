@@ -33,7 +33,11 @@ export function convert(
   const opts = resolveOptions(options);
 
   const indexed = buildIndexedImage(image, opts);
-  const rows = buildRowGradients(indexed, opts.cssVarPrefix);
+  // inlinePalette: write literal colors into the gradients and emit no palette.
+  const colorRef = opts.inlinePalette
+    ? (i: number) => indexed.colors[i]!
+    : undefined;
+  const rows = buildRowGradients(indexed, opts.cssVarPrefix, colorRef);
   const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
   const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
@@ -41,6 +45,7 @@ export function convert(
     indexed,
     layers,
     opts,
+    opts.inlinePalette ? new Set<number>() : undefined,
   );
   const meta = buildMeta(indexed, layers, opts, layerClass);
 

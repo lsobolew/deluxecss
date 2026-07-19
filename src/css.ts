@@ -78,12 +78,16 @@ export function buildCss(
   }
 
   // Palette custom properties (only the ones actually referenced as variables).
+  // With an empty paletteIndices set (inlinePalette) there are no variables at
+  // all, so skip the palette rule entirely rather than emit an empty block.
   const paletteVars = colors
     .map((c, i) => ({ c, i }))
     .filter(({ i }) => !paletteIndices || paletteIndices.has(i))
     .map(({ c, i }) => `  --${cssVarPrefix}-${i}: ${c};`)
     .join("\n");
-  blocks.push(`${paletteSelector} {\n${paletteVars}\n}`);
+  if (paletteVars.length > 0) {
+    blocks.push(`${paletteSelector} {\n${paletteVars}\n}`);
+  }
 
   // Container / sizing (+ background painted directly on it in single-element mode).
   let containerBody = sizingDecls(width, height, sizing, scale);

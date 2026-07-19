@@ -166,6 +166,16 @@ export interface Options {
    * `var()` lookups sharply (static regions dominate most images). Default false.
    */
   inlineStaticColors?: boolean;
+
+  /**
+   * Emit every color as a literal in the gradients and drop the `--color-*`
+   * palette entirely (no palette rule, no `@property`). This trades away live
+   * recolorability for a smaller, palette-free stylesheet — the right choice for
+   * frame-by-frame animations (`frames` mode) and one-off static images, where
+   * the palette is never touched. Applies to static + `frames` output; ignored
+   * in palette-cycling modes, which need the variables to animate. Default false.
+   */
+  inlinePalette?: boolean;
 }
 
 /** Fully-resolved options with every default applied. */
