@@ -34,3 +34,30 @@ cycling**: the animation keyframes only change `--color-*` *values* — no
 - Palette cycling only works when pixels **don't move** (color animation).
 - Still ~522 animated custom properties feeding the overlay's gradients, so each
   tick recomputes the whole bounding box — cheaper than full-frame, but not free.
+
+## Sketch (simplified)
+
+```html
+<div class="pixel-image palette">
+  <div class="pixel-image__layer"></div>    <!-- static base -->
+  <div class="pixel-image__overlay"></div>  <!-- moving region only -->
+</div>
+```
+
+```css
+/* low slots = static (used only by the base) · high slots = animated (overlay) */
+.palette { --color-0:#2a6d3a; /* … */ --color-49:#3aa0ff; --color-50:#8ecbff; }
+
+.pixel-image { position: relative; display: grid;
+  animation: c49 1.5s step-end infinite, c50 1.5s step-end infinite; }
+
+.pixel-image__layer   { /* base — references only --color-0..47, so never recomputes */ }
+.pixel-image__overlay {                 /* references only the animated --color-49.. */
+  position: absolute; left: calc(var(--pixel-width) * 202); top: calc(var(--pixel-height) * 24);
+  width: calc(var(--pixel-width) * 266); height: calc(var(--pixel-height) * 262);
+  background-image: linear-gradient(to right, var(--color-49) 0, var(--color-50) 100%);
+}
+/* only variable VALUES change → only the small overlay repaints */
+@keyframes c49 { 0% { --color-49:#3aa0ff } 50% { --color-49:#2b7fd0 } }
+@keyframes c50 { 0% { --color-50:#8ecbff } 50% { --color-50:#ffffff } }
+```

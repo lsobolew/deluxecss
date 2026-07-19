@@ -24,3 +24,16 @@ of CSS variables the bottleneck?"
   remain live-editable.
 - If playback is still not smooth, the bottleneck is the per-frame gradient
   **repaint**, not the variable count.
+
+## Sketch (simplified)
+
+```css
+/* only the ANIMATING colours stay variables; static ones are literal hex */
+.pixel-image {
+  background-image: linear-gradient(to right,
+    #2a6d3a 0, #2a6d3a 40%,          /* static jungle — inlined, no var() */
+    var(--water) 40%, var(--water) 100%);  /* moving water — the only variable */
+  animation: cycle 1.5s step-end infinite;
+}
+@keyframes cycle { 0% { --water: #3aa0ff } 50% { --water: #8ecbff } }
+```

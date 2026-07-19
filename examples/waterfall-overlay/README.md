@@ -43,3 +43,32 @@ original **640×286** (16 frames).
 - File is still bigger than palette mode — the overlay stores every frame's
   moving-region gradients. Fewer frames (`--max-frames`) is the bigger lever for
   this content.
+
+## Sketch (simplified)
+
+```html
+<div class="pixel-image palette">
+  <div class="pixel-image__layer"></div>    <!-- static base (one of N layers) -->
+  <div class="pixel-image__overlay"></div>  <!-- only the moving region -->
+</div>
+```
+
+```css
+.pixel-image { position: relative; display: grid; }
+.pixel-image__layer { /* base — painted once, never repaints */ }
+
+.pixel-image__overlay {                 /* cropped to the water's bounding box */
+  position: absolute;
+  left:  calc(var(--pixel-width)  * 202);   /* box offset */
+  top:   calc(var(--pixel-height) * 24);
+  width: calc(var(--pixel-width)  * 266);   /* box size */
+  height:calc(var(--pixel-height) * 262);
+  background-size: 100% var(--pixel-height);
+  animation: play 1.5s step-end infinite;   /* swaps the whole overlay per frame */
+}
+/* each frame = a fixed background (rasterised once, then cached) */
+@keyframes play {
+  0%  { background-image: /* frame 0 — changing pixels, else transparent */; }
+  50% { background-image: /* frame 1 */; }
+}
+```

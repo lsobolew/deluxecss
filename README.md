@@ -314,6 +314,13 @@ pixel-css monkey_island_waterfal.gif --animate --resize 256 --max-colors 48 \
 
 ## Notes & tradeoffs
 
+- **Warm-up, then cheap (raster caching).** In `frames` mode (and the overlay's
+  frame-swap) each frame is a *fixed* `background-image` value, so the browser
+  rasterizes each distinct frame **once and caches it**. The first loop is
+  visibly slow — every frame is being painted for the first time — but subsequent
+  loops replay the cached rasters and run smoothly. Expect a one-time warm-up
+  cost, not a steady per-frame cost. (Palette modes don't get this: the gradients
+  reference `--color-*`, so each tick recomputes rather than replaying a cache.)
 - **Seams.** `container`/`percent` sizing can show faint sub-pixel seams between
   rows at some zoom levels. Use `sizing: "pixel"` for pixel-perfect output.
 - **Animating colors.** Custom properties animate discretely unless registered.

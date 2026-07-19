@@ -83,3 +83,27 @@ not download size.
   the keyframes then swap it. (The library's `frames` mode already emits that
   static frame-0 background — this is why it works.) Method 1 sidesteps the whole
   issue because it is a single background layer.
+
+## Sketch (simplified)
+
+```html
+<!-- one W×H box of filler characters that wraps into H lines of W -->
+<div class="box"><span class="strip">0000000000000000000000000…</span></div>
+```
+
+```css
+.box {
+  --u: 1ch;                        /* one character = one pixel, horizontally */
+  font: 20px/12px monospace; width: calc(var(--u) * 12);  /* 12 chars per line */
+  white-space: normal; word-break: break-all; overflow: hidden;
+}
+.strip {
+  box-decoration-break: slice;     /* THE trick: background is continuous across
+                                      wrapped lines, then sliced per line */
+  color: transparent;              /* hide the filler glyphs */
+  background-repeat: no-repeat;
+  background-size: calc(var(--u) * 192) 12px;   /* the full W*H unrolled strip */
+  /* ONE gradient with every pixel unrolled row-major */
+  background-image: linear-gradient(to right, #000 0, #000 calc(var(--u)*3), /* … */);
+}
+```

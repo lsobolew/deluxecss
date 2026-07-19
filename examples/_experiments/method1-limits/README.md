@@ -57,3 +57,22 @@ full-resolution video: the single-gradient render ceiling (~576px here) and the
 per-frame paint cost of a huge gradient rule it out. For large frames the per-row,
 multi-layer approach (the library's `frames` mode) is the one that renders — see
 `../one-gradient/matrix-method2.html`.
+
+## Sketch (simplified)
+
+```css
+/* one gradient per frame, swapped via @keyframes; wraps via box-decoration-break */
+.strip {
+  box-decoration-break: slice; color: transparent;
+  background-size: calc(var(--u) * /* W*H */) 3px;
+  animation: play 3s step-end infinite; will-change: background-image;
+}
+@keyframes play {
+  0%   { background-image: /* frame0: whole image in ONE gradient */; }
+  1.4% { background-image: /* frame1 */; }
+  /* …one stop per frame… */
+}
+```
+
+Past ~576px wide that single gradient has too many stops and Chrome paints
+nothing — that's the ceiling this experiment maps.

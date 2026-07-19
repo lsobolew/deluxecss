@@ -23,3 +23,25 @@ scene.
 - Lower resolution — a single element can't paint a full-res detailed frame
   (goes blank past ~256px here).
 - Still animates custom properties on the CPU; smoothness depends on machine.
+
+## Sketch (simplified)
+
+```html
+<div class="pixel-image palette"></div>  <!-- single element, no child layers -->
+```
+
+```css
+.palette { --color-0: #2a6d3a; --color-1: #8ecbff; }
+.pixel-image {
+  background-repeat: no-repeat;
+  background-size: 100% var(--pixel-height);
+  /* the background is delivered from a HELD @keyframes (folder-9 trick),
+     not set statically — this promotes the element to its own layer */
+  animation: bg 1.5s step-end infinite, cycle 1.5s step-end infinite;
+  will-change: background-image;
+}
+@keyframes bg { 0%, 100% {
+  background-image: linear-gradient(to right, var(--color-0) 0, var(--color-1) 100%);
+} }
+@keyframes cycle { 0% { --color-1: #8ecbff } 50% { --color-1: #ffffff } }
+```

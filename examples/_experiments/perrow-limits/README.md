@@ -45,3 +45,20 @@ Each document has the top-right **FPS meter** — measure in a **real browser**.
 Frame count only affects CSS size / parse time, not whether a frame *renders*. The
 per-row + position-in-keyframe technique renders arbitrarily large single-element
 frames; playback smoothness at 24fps is what degrades with resolution.
+
+## Sketch (simplified)
+
+```css
+/* one element, one gradient PER ROW, frame-swapped — image AND position in the
+   keyframe together (the 10m technique), so all rows bind */
+.img {
+  --u: 3px;
+  background-size: 100% 3px;
+  animation: play 2s step-end infinite; will-change: background-image;
+}
+@keyframes play {
+  0%   { background-image: /* frame0: H row-gradients */; background-position: 0 0, 0 3px, /* … */; }
+  4%   { background-image: /* frame1 */;                  background-position: 0 0, 0 3px, /* … */; }
+  /* …one stop per frame… */
+}
+```
