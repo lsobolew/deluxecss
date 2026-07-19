@@ -102,7 +102,7 @@ const html = `<!doctype html>
     --u: ${ROWH}px;   /* horizontal pixel = vertical pixel (ROWH) → square pixels, correct aspect */
     width: calc(var(--u) * ${W}); height: ${H * ROWH}px; margin: 8px 12px;
     background-repeat: no-repeat; background-size: 100% ${ROWH}px;
-    animation: play ${duration}s steps(${N}) infinite; will-change: background-image;
+    animation: play ${duration}s step-end infinite; will-change: background-image;
   }
   @keyframes play {
 ${kf}

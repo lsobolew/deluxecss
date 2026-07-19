@@ -115,7 +115,7 @@ const html = `<!doctype html>
     -webkit-box-decoration-break: slice; box-decoration-break: slice;
     color: transparent;
     background-repeat: no-repeat; background-size: calc(var(--u) * ${PX}) ${ROWH}px;
-    animation: play ${duration}s steps(${N}) infinite; will-change: background-image;
+    animation: play ${duration}s step-end infinite; will-change: background-image;
   }
   @keyframes play {
 ${kfStops}
