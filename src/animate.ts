@@ -407,13 +407,17 @@ function convertOverlay(
     hasAlpha: true,
   };
   const baseRows = buildRowGradients(baseImage, opts.cssVarPrefix);
-  const baseLayer = packLayers(baseRows, Infinity, Infinity)[0]!;
-  const { css: baseCss, layerClass } = buildCss(
-    baseImage,
-    [baseLayer],
-    resolveOptions({ ...options, singleElement: true }),
+  // Static base as STACKED LAYERS (not one element). A single element can't paint
+  // a full-resolution frame, but split across <div> layers it renders at any
+  // size. The base is painted once; only the small overlay repaints per frame.
+  const baseLayers = packLayers(
+    baseRows,
+    opts.singleElement ? Infinity : opts.layerChunkSize,
+    opts.singleElement ? Infinity : opts.maxStopsPerLayer,
   );
-  const meta = buildMeta(baseImage, [baseLayer], opts, layerClass);
+  const { css: baseCss, layerClass } = buildCss(baseImage, baseLayers, opts);
+  const meta = buildMeta(baseImage, baseLayers, opts, layerClass);
+  const overlayClass = layerClass.replace(/__layer$/, "__overlay");
 
   // Bounding box of every pixel that ever changes. The overlay only needs to
   // cover this rectangle (where the water flows) — not the whole frame — so its
@@ -496,7 +500,7 @@ function convertOverlay(
   css +=
     // Anchor the absolutely-positioned overlay to the container.
     `\n${opts.selector} { position: relative; }\n` +
-    `\n${opts.selector} > .${layerClass} {` +
+    `\n${opts.selector} > .${overlayClass} {` +
     `\n  position: absolute;` +
     `\n  left: calc(var(--pixel-width) * ${minX});` +
     `\n  top: calc(var(--pixel-height) * ${minY});` +
@@ -514,11 +518,17 @@ function convertOverlay(
     `@keyframes pxc-overlay {\n${stops.join("\n")}\n}\n`;
 
   meta.animation = { mode: "overlay", duration, frames: frames.length };
-  meta.layerCount = 1; // one overlay layer over the element's own background
 
   const result: ConvertResult = { css, meta };
   if (opts.emitHtml) {
-    result.html = buildHtml(meta.selector, layerClass, 1, false);
+    const baseClass = meta.selector.replace(/^\./, "");
+    const layerDivs = Array.from(
+      { length: baseLayers.length },
+      () => `  <div class="${layerClass}"></div>`,
+    ).join("\n");
+    result.html =
+      `<div class="${baseClass} palette">\n${layerDivs}\n` +
+      `  <div class="${overlayClass}"></div>\n</div>`;
   }
   return result;
 }

@@ -2,14 +2,20 @@
 
 A "dirty region" approach: the pixels that never change are painted **once** as a
 static background; a separate, mostly-transparent **overlay** layer defines only
-the pixels that actually move, and it is frame-swapped. 256×114 (×2).
+the pixels that actually move, and it is frame-swapped. Rendered at the source's
+original **640×286** (16 frames).
 
 ## Technique
 
 - **`animationMode: "overlay"`** — split the image into:
-  - a static base (unchanging pixels; changing pixels cut out as `transparent`);
-  - an overlay `<div>` whose per-frame `background-image` defines just the
-    changing pixels, everything else `transparent`. Rows with no change are
+  - a static base (unchanging pixels; changing pixels cut out as `transparent`),
+    painted across **stacked `<div>` layers**. A single element can't paint a
+    full-resolution frame (it goes blank past ~256px, and delivering it via a
+    *held* `@keyframes` doesn't help — only genuinely frame-swapping content gets
+    the compositor tiling that renders large). Splitting the base across layers
+    is what lets it render at 640;
+  - a `.pixel-image__overlay` `<div>` whose per-frame `background-image` defines
+    just the changing pixels, everything else `transparent`. Rows with no change are
     omitted from the overlay entirely.
 - **Cropped to the moving region.** The overlay is not full-frame: it's an
   absolutely-positioned element sized to the **bounding box** of every pixel that
