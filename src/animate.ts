@@ -370,12 +370,23 @@ function convertOverlay(
   );
   const slot = (t: number) => (t === TRANSPARENT_TOKEN ? transparentIndex : t);
 
-  // A pixel is "changing" if its token differs across frames.
+  // A pixel is "changing" only if its ORIGINAL colour varies by more than
+  // `changeThreshold` (per channel) across the loop. Using the source colours
+  // (not the quantized tokens) ignores quantization flicker between near-
+  // identical colours, keeping the animated region tight around real motion.
+  const threshold = opts.changeThreshold;
   const changing = new Uint8Array(pixelCount);
-  for (let p = 0; p < pixelCount; p++) {
-    const first = tokenFrames[0]![p]!;
+  for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
+    const r0 = frames[0]![i]!;
+    const g0 = frames[0]![i + 1]!;
+    const b0 = frames[0]![i + 2]!;
     for (let f = 1; f < frames.length; f++) {
-      if (tokenFrames[f]![p]! !== first) {
+      const fr = frames[f]!;
+      if (
+        Math.abs(fr[i]! - r0) > threshold ||
+        Math.abs(fr[i + 1]! - g0) > threshold ||
+        Math.abs(fr[i + 2]! - b0) > threshold
+      ) {
         changing[p] = 1;
         break;
       }
@@ -404,34 +415,66 @@ function convertOverlay(
   );
   const meta = buildMeta(baseImage, [baseLayer], opts, layerClass);
 
-  // Rows that contain at least one changing pixel — only these appear in the
-  // overlay. Fully-static rows are omitted entirely, so the static background
-  // shows through them (nothing to repaint there each frame).
-  const activeRows: number[] = [];
+  // Bounding box of every pixel that ever changes. The overlay only needs to
+  // cover this rectangle (where the water flows) — not the whole frame — so its
+  // gradients are short and it's positioned into place.
+  let minX = width,
+    maxX = -1,
+    minY = height,
+    maxY = -1;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (changing[y * width + x]) {
-        activeRows.push(y);
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) {
+    // Nothing animates — degenerate to a 1×1 box so the code below is valid.
+    minX = 0;
+    minY = 0;
+    maxX = 0;
+    maxY = 0;
+  }
+  const boxW = maxX - minX + 1;
+  const boxH = maxY - minY + 1;
+
+  // Rows within the box that actually contain a changing pixel (positions are
+  // box-local, so the static background shows through the omitted ones).
+  const activeRows: number[] = [];
+  for (let r = 0; r < boxH; r++) {
+    const gy = minY + r;
+    for (let c = 0; c < boxW; c++) {
+      if (changing[gy * width + minX + c]) {
+        activeRows.push(r);
         break;
       }
     }
   }
   const overlayPosition = activeRows
-    .map((y) => `0 calc(var(--pixel-height) * ${y})`)
+    .map((r) => `0 calc(var(--pixel-height) * ${r})`)
     .join(", ");
 
-  // Overlay per frame: only the changing pixels are defined; everything else is
-  // transparent (long transparent runs collapse to almost nothing under RLE).
+  // Overlay per frame: a box-sized image (boxW × boxH) where only changing
+  // pixels are defined; everything else is transparent.
+  const boxPixels = boxW * boxH;
   const overlayBg = tokenFrames.map((tokens) => {
-    const idx = new Int32Array(pixelCount);
-    for (let p = 0; p < pixelCount; p++) {
-      idx[p] = changing[p] ? slot(tokens[p]!) : transparentIndex;
+    const idx = new Int32Array(boxPixels);
+    for (let r = 0; r < boxH; r++) {
+      const gy = minY + r;
+      for (let c = 0; c < boxW; c++) {
+        const gp = gy * width + minX + c;
+        idx[r * boxW + c] = changing[gp] ? slot(tokens[gp]!) : transparentIndex;
+      }
     }
     const rows = buildRowGradients(
-      { width, height, colors, indices: idx, hasAlpha: true },
+      { width: boxW, height: boxH, colors, indices: idx, hasAlpha: true },
       opts.cssVarPrefix,
     );
-    return activeRows.map((y) => rows.gradients[y]!).join(", ");
+    return activeRows.map((r) => rows.gradients[r]!).join(", ");
   });
 
   const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
@@ -451,11 +494,14 @@ function convertOverlay(
 
   let css = baseCss + "\n";
   css +=
+    // Anchor the absolutely-positioned overlay to the container.
+    `\n${opts.selector} { position: relative; }\n` +
     `\n${opts.selector} > .${layerClass} {` +
-    `\n  grid-column: 1;` +
-    `\n  grid-row: 1;` +
-    `\n  width: 100%;` +
-    `\n  height: 100%;` +
+    `\n  position: absolute;` +
+    `\n  left: calc(var(--pixel-width) * ${minX});` +
+    `\n  top: calc(var(--pixel-height) * ${minY});` +
+    `\n  width: calc(var(--pixel-width) * ${boxW});` +
+    `\n  height: calc(var(--pixel-height) * ${boxH});` +
     `\n  background-repeat: no-repeat;` +
     `\n  background-size: 100% var(--pixel-height);` +
     `\n  background-position: ${overlayPosition};` +

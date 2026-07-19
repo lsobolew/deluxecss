@@ -22,6 +22,7 @@ export const DEFAULTS: ResolvedOptions = {
   minify: false,
   animationMode: "palette",
   maxFrames: undefined,
+  changeThreshold: 16,
   willChange: true,
   backgroundInKeyframes: false,
   inlineStaticColors: false,

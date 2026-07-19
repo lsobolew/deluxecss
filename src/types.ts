@@ -120,6 +120,14 @@ export interface Options {
   maxFrames?: number;
 
   /**
+   * `overlay` mode only: a pixel counts as "changing" only if its color varies
+   * by more than this (0-255, per channel) across the loop. Filters out
+   * quantization flicker so the animated region — and the overlay's bounding box
+   * — stays tight around what actually moves. Default 16; 0 = any change.
+   */
+  changeThreshold?: number;
+
+  /**
    * Animation only (`frames` mode): emit a `will-change: background-image` hint
    * to promote the element to its own compositing layer. Default true.
    */
