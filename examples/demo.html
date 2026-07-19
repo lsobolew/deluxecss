@@ -210,6 +210,10 @@
         <div class="t">Waterfall — one element (frames) <span class="tag">~20 MB</span></div>
         <div class="d">640×286 frame-by-frame on a <em>single</em> element (the <code>10m</code> technique), palette + per-stop unit inlined so the gradients are <code>var()</code>-free — renders in Chrome and Safari. Slow first paint.</div>
       </a>
+      <a href="waterfall-50frames/index.html">
+        <div class="t">Waterfall — all 50 frames <span class="tag">~165 MB</span></div>
+        <div class="d">The complete loop, every GIF frame. Multi-layer so its <code>@keyframes</code> split across 11 linked <code>.css</code> files (single-element can't split). Very slow first paint; the ceiling of this technique.</div>
+      </a>
       <a href="matrix/index.html">
         <div class="t">Matrix — film clip</div>
         <div class="d">256×145, first ~5s, frame-by-frame (frames mode).</div>
