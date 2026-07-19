@@ -111,10 +111,13 @@
         cursor: pointer;
       }
       /* Pure-CSS palette swap — no JavaScript. When the Luigi radio is checked,
-         :has() lets the wrapper override Mario's signature red (--color-1) with
-         Luigi green; the sprite recolors instantly. */
+         :has() lets the wrapper rewrite the whole palette to Luigi's colors; the
+         sprite recolors instantly. --color-1 = hat/clothes, --color-2 = beard +
+         shoes, --color-3 = skin (--color-0 stays the outline). */
       .mario-swap:has(input.luigi:checked) .hero {
-        --color-1: #1fa81f;
+        --color-1: #fdfefc;
+        --color-2: #05ba05;
+        --color-3: #fba244;
       }
     </style>
     <!-- The pure-CSS Mario/Luigi below needs the generated stylesheet in the
