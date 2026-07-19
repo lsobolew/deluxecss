@@ -280,6 +280,14 @@ el.exportPalette(); // current palette as string[]
 npm run demo   # builds, then serves the examples on http://localhost:5173
 ```
 
+Start at **<http://localhost:5173/examples/demo.html>** — it's a hub linking every
+example. The demo server injects a small enhancer into each page: an **FPS meter**
+(top-right) and a **📖 README** button (bottom-left) that renders that example's
+`README.md` — technique, pros and cons — as a slide-in panel (append `#readme` to
+the URL to open it directly). The generated files themselves stay untouched.
+
+Direct links:
+
 - Widget + live palette panel: <http://localhost:5173/examples/demo.html>
 - Animated waterfall, palette mode, original 640×286 (28 layers): <http://localhost:5173/examples/waterfall/>
 - Single layer (256×114), variants to compare playback:

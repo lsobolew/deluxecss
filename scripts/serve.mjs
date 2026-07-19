@@ -26,9 +26,24 @@ const server = createServer(async (req, res) => {
       res.writeHead(403).end("Forbidden");
       return;
     }
+    const ext = extname(filePath);
+    if (ext === ".html") {
+      // Inject the demo-time enhancer (FPS meter + README panel) into every
+      // page, without touching the generated files on disk.
+      const inject =
+        `<script src="/examples/vendor/marked.umd.js"></script>` +
+        `<script src="/examples/_enhance.js"></script>`;
+      let html = await readFile(filePath, "utf8");
+      html = html.includes("</body>")
+        ? html.replace("</body>", inject + "</body>")
+        : html + inject;
+      res.writeHead(200, { "content-type": "text/html" });
+      res.end(html);
+      return;
+    }
     const body = await readFile(filePath);
     res.writeHead(200, {
-      "content-type": TYPES[extname(filePath)] ?? "application/octet-stream",
+      "content-type": TYPES[ext] ?? "application/octet-stream",
     });
     res.end(body);
   } catch {
