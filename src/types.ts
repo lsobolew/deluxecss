@@ -126,11 +126,14 @@ export interface Options {
   /**
    * Palette / overlay-palette only: how the color-cycling keyframes are laid out.
    * - `per-color` (default): one `@keyframes` per animated slot (each cycles just
-   *   its own `--color-*`), and the element runs all of them at once.
+   *   its own `--color-*`, with dedup), and the element runs all of them at once.
    * - `combined`: a single `@keyframes` whose every stop defines *all* the
    *   changing colors for that frame, driven by one animation.
+   * - a **number** N: group the animated slots into `@keyframes` of N colors each
+   *   (so `⌈slots/N⌉` animations, each stop setting its group's N colors). Lets
+   *   you dial the count/size tradeoff — e.g. 522×1 vs 44×12 vs 1×522.
    */
-  paletteKeyframes?: "per-color" | "combined";
+  paletteKeyframes?: "per-color" | "combined" | number;
 
   /**
    * `overlay` mode only: a pixel counts as "changing" only if its color varies

@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>palette-grouping experiment</title>
+<style>body{font:15px/1.6 system-ui;background:#101418;color:#e6e6e6;margin:0;padding:32px}a{color:#6db3ff}
+  table{border-collapse:collapse;margin-top:12px}td,th{border:1px solid #2a333d;padding:6px 12px;text-align:left}</style></head>
+<body><h1>Palette-cycling keyframe grouping — 640×286, 8 frames</h1>
+<p>Same clip; only how the animated colors are grouped into <code>@keyframes</code> differs.
+Open each and watch the FPS meter (and how long it takes to first paint).</p>
+<table><tr><th>paletteKeyframes</th><th>@keyframes</th><th>animated colors</th><th>CSS</th></tr>
+<tr><td><a href="pg-per-color.html">per-color</a></td><td>479</td><td>479</td><td>5.0 MB</td></tr>
+<tr><td><a href="pg-1.html">1</a></td><td>479</td><td>479</td><td>5.1 MB</td></tr>
+<tr><td><a href="pg-12.html">12</a></td><td>40</td><td>479</td><td>5.0 MB</td></tr>
+<tr><td><a href="pg-64.html">64</a></td><td>8</td><td>479</td><td>5.0 MB</td></tr>
+<tr><td><a href="pg-combined.html">combined</a></td><td>1</td><td>479</td><td>5.0 MB</td></tr>
+</table></body></html>

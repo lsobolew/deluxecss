@@ -33,8 +33,9 @@ Options:
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --change-threshold <n>  overlay: min per-channel color delta (0-255) for a
                               pixel to count as animated (default 16; filters noise)
-      --palette-keyframes <m> per-color | combined (default per-color): one
-                              @keyframes per animated color, or one that sets all
+      --palette-keyframes <m> per-color | combined | <n> (default per-color):
+                              one @keyframes per color, one for all, or grouped
+                              into @keyframes of n colors each
       --no-will-change        Omit the will-change hint (frames mode)
       --bg-in-keyframes       Deliver background-image via a held @keyframes rule
                               (compositing-layer promotion; single or per-layer)
@@ -116,7 +117,7 @@ async function main(): Promise<void> {
     animationMode: values["anim-mode"] as Options["animationMode"],
     maxFrames: num(values["max-frames"]),
     changeThreshold: num(values["change-threshold"]),
-    paletteKeyframes: values["palette-keyframes"] as Options["paletteKeyframes"],
+    paletteKeyframes: parsePaletteKeyframes(values["palette-keyframes"]),
     willChange: values["no-will-change"] ? false : undefined,
     backgroundInKeyframes: values["bg-in-keyframes"],
     inlineStaticColors: values["inline-static-colors"],
@@ -181,6 +182,18 @@ function num(v: string | undefined): number | undefined {
   if (v === undefined) return undefined;
   const n = Number(v);
   if (Number.isNaN(n)) throw new Error(`Expected a number, got "${v}"`);
+  return n;
+}
+
+function parsePaletteKeyframes(
+  v: string | undefined,
+): Options["paletteKeyframes"] {
+  if (v === undefined) return undefined;
+  if (v === "per-color" || v === "combined") return v;
+  const n = Number(v);
+  if (Number.isNaN(n)) {
+    throw new Error(`--palette-keyframes: expected per-color|combined|<number>, got "${v}"`);
+  }
   return n;
 }
 

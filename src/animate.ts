@@ -693,20 +693,12 @@ function convertOverlayPalette(
 
   let animRule = "";
   const kfBlocks: string[] = [];
-  if (animated.length > 0 && opts.paletteKeyframes === "combined") {
-    // ONE animation; every keyframe stop defines ALL the changing colors.
-    animRule = `\n${opts.selector} { animation: pxc-cycle ${dur} step-end infinite; }\n`;
-    const stops = framePct
-      .map(
-        (pct, f) =>
-          `  ${pct}% { ${animated
-            .map((t) => `--${opts.cssVarPrefix}-${t.idx}: ${tokenToColor(t.seq[f]!)};`)
-            .join(" ")} }`,
-      )
-      .join("\n");
-    kfBlocks.push(`@keyframes pxc-cycle {\n${stops}\n}`);
-  } else if (animated.length > 0) {
-    // One @keyframes per animated slot (per-color, with per-slot dedup).
+  const pk = opts.paletteKeyframes;
+  if (animated.length === 0) {
+    // no animation
+  } else if (pk === "per-color") {
+    // One @keyframes per animated slot, with per-slot dedup (the efficient
+    // default): N animations, each cycling a single --color-*.
     const names: string[] = [];
     for (const t of animated) {
       const name = `pxc-${t.idx}`;
@@ -721,6 +713,33 @@ function convertOverlayPalette(
         }
       }
       kfBlocks.push(`@keyframes ${name} {\n${kfStops.join("\n")}\n}`);
+    }
+    animRule = `\n${opts.selector} { animation: ${names
+      .map((n) => `${n} ${dur} step-end infinite`)
+      .join(", ")}; }\n`;
+  } else {
+    // Group the animated slots into chunks; each group is one @keyframes whose
+    // every stop sets all the group's colors for that frame (no dedup). Group
+    // size = `combined` → all in one; a number → that many vars per animation.
+    // This lets you dial the count/size tradeoff (e.g. 522×1 vs 44×12 vs 1×522).
+    const groupSize =
+      pk === "combined"
+        ? animated.length
+        : Math.max(1, Math.min(animated.length, Math.floor(Number(pk))));
+    const names: string[] = [];
+    for (let g = 0; g < animated.length; g += groupSize) {
+      const group = animated.slice(g, g + groupSize);
+      const name = `pxc-g${g / groupSize}`;
+      names.push(name);
+      const stops = framePct
+        .map(
+          (pct, f) =>
+            `  ${pct}% { ${group
+              .map((t) => `--${opts.cssVarPrefix}-${t.idx}: ${tokenToColor(t.seq[f]!)};`)
+              .join(" ")} }`,
+        )
+        .join("\n");
+      kfBlocks.push(`@keyframes ${name} {\n${stops}\n}`);
     }
     animRule = `\n${opts.selector} { animation: ${names
       .map((n) => `${n} ${dur} step-end infinite`)
