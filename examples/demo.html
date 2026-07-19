@@ -131,8 +131,12 @@
         <div class="d">640×286. Static base + a cropped overlay that frame-swaps only the moving region.</div>
       </a>
       <a href="waterfall-overlay-palette/index.html">
-        <div class="t">Waterfall — overlay (palette)</div>
-        <div class="d">640×286. Static base painted once + a palette-cycling overlay — only the moving region recomputes. ~5MB.</div>
+        <div class="t">Waterfall — overlay (palette, per-color)</div>
+        <div class="d">640×286. Static base + palette-cycling overlay; one <code>@keyframes</code> per changing color (522 animations).</div>
+      </a>
+      <a href="waterfall-overlay-palette-combined/index.html">
+        <div class="t">Waterfall — overlay (palette, combined)</div>
+        <div class="d">Same, but ONE <code>@keyframes</code> whose every stop sets all changing colors. Heavier to init — capped at 8 frames.</div>
       </a>
       <a href="waterfall-frames/index.html">
         <div class="t">Waterfall — frames mode</div>

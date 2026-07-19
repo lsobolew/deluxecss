@@ -23,6 +23,7 @@ export const DEFAULTS: ResolvedOptions = {
   animationMode: "palette",
   maxFrames: undefined,
   changeThreshold: 16,
+  paletteKeyframes: "per-color",
   willChange: true,
   backgroundInKeyframes: false,
   inlineStaticColors: false,

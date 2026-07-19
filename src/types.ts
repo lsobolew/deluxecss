@@ -124,6 +124,15 @@ export interface Options {
   maxFrames?: number;
 
   /**
+   * Palette / overlay-palette only: how the color-cycling keyframes are laid out.
+   * - `per-color` (default): one `@keyframes` per animated slot (each cycles just
+   *   its own `--color-*`), and the element runs all of them at once.
+   * - `combined`: a single `@keyframes` whose every stop defines *all* the
+   *   changing colors for that frame, driven by one animation.
+   */
+  paletteKeyframes?: "per-color" | "combined";
+
+  /**
    * `overlay` mode only: a pixel counts as "changing" only if its color varies
    * by more than this (0-255, per channel) across the loop. Filters out
    * quantization flicker so the animated region — and the overlay's bounding box

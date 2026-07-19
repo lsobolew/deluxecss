@@ -33,6 +33,8 @@ Options:
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --change-threshold <n>  overlay: min per-channel color delta (0-255) for a
                               pixel to count as animated (default 16; filters noise)
+      --palette-keyframes <m> per-color | combined (default per-color): one
+                              @keyframes per animated color, or one that sets all
       --no-will-change        Omit the will-change hint (frames mode)
       --bg-in-keyframes       Deliver background-image via a held @keyframes rule
                               (compositing-layer promotion; single or per-layer)
@@ -70,6 +72,7 @@ async function main(): Promise<void> {
       "anim-mode": { type: "string" },
       "max-frames": { type: "string" },
       "change-threshold": { type: "string" },
+      "palette-keyframes": { type: "string" },
       "no-will-change": { type: "boolean" },
       "bg-in-keyframes": { type: "boolean" },
       "inline-static-colors": { type: "boolean" },
@@ -113,6 +116,7 @@ async function main(): Promise<void> {
     animationMode: values["anim-mode"] as Options["animationMode"],
     maxFrames: num(values["max-frames"]),
     changeThreshold: num(values["change-threshold"]),
+    paletteKeyframes: values["palette-keyframes"] as Options["paletteKeyframes"],
     willChange: values["no-will-change"] ? false : undefined,
     backgroundInKeyframes: values["bg-in-keyframes"],
     inlineStaticColors: values["inline-static-colors"],

@@ -675,40 +675,63 @@ function convertOverlayPalette(
     .map((r) => `0 calc(var(--pixel-height) * ${r})`)
     .join(", ");
 
-  // Palette keyframes: one per animated track (only those that actually change).
+  // Palette keyframes. Only tracks that actually change over the loop animate.
   const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
   const duration = options.duration ?? totalDelay / 1000;
   const dur = `var(--pixel-anim-duration, ${duration}s)`;
-  const animNames: string[] = [];
-  const kfBlocks: string[] = [];
-  trackSeqs.forEach((seq, track) => {
-    if (isConstant(seq)) return;
-    const idx = trackBase + track;
-    const name = `pxc-${idx}`;
-    animNames.push(name);
-    const kfStops: string[] = [];
+  const animated = trackSeqs
+    .map((seq, track) => ({ idx: trackBase + track, seq }))
+    .filter((t) => !isConstant(t.seq));
+  const framePct: number[] = [];
+  {
     let elapsed = 0;
-    let prev: string | null = null;
-    for (let f = 0; f < seq.length; f++) {
-      const color = tokenToColor(seq[f]!);
-      if (color !== prev) {
-        const pct = f === 0 ? 0 : round((elapsed / totalDelay) * 100);
-        kfStops.push(`  ${pct}% { --${opts.cssVarPrefix}-${idx}: ${color}; }`);
-        prev = color;
-      }
+    for (let f = 0; f < frames.length; f++) {
+      framePct.push(f === 0 ? 0 : round((elapsed / totalDelay) * 100));
       elapsed += delays[f] ?? 0;
     }
-    kfBlocks.push(`@keyframes ${name} {\n${kfStops.join("\n")}\n}`);
-  });
+  }
+
+  let animRule = "";
+  const kfBlocks: string[] = [];
+  if (animated.length > 0 && opts.paletteKeyframes === "combined") {
+    // ONE animation; every keyframe stop defines ALL the changing colors.
+    animRule = `\n${opts.selector} { animation: pxc-cycle ${dur} step-end infinite; }\n`;
+    const stops = framePct
+      .map(
+        (pct, f) =>
+          `  ${pct}% { ${animated
+            .map((t) => `--${opts.cssVarPrefix}-${t.idx}: ${tokenToColor(t.seq[f]!)};`)
+            .join(" ")} }`,
+      )
+      .join("\n");
+    kfBlocks.push(`@keyframes pxc-cycle {\n${stops}\n}`);
+  } else if (animated.length > 0) {
+    // One @keyframes per animated slot (per-color, with per-slot dedup).
+    const names: string[] = [];
+    for (const t of animated) {
+      const name = `pxc-${t.idx}`;
+      names.push(name);
+      const kfStops: string[] = [];
+      let prev: string | null = null;
+      for (let f = 0; f < t.seq.length; f++) {
+        const color = tokenToColor(t.seq[f]!);
+        if (color !== prev) {
+          kfStops.push(`  ${framePct[f]}% { --${opts.cssVarPrefix}-${t.idx}: ${color}; }`);
+          prev = color;
+        }
+      }
+      kfBlocks.push(`@keyframes ${name} {\n${kfStops.join("\n")}\n}`);
+    }
+    animRule = `\n${opts.selector} { animation: ${names
+      .map((n) => `${n} ${dur} step-end infinite`)
+      .join(", ")}; }\n`;
+  }
 
   let css = baseCss + "\n";
   css += `\n${opts.selector} { position: relative; }\n`;
   // The animation (palette cycling) lives on the container; only the overlay's
   // gradients reference the animated slots, so only the overlay repaints.
-  if (animNames.length > 0) {
-    const list = animNames.map((n) => `${n} ${dur} step-end infinite`).join(", ");
-    css += `\n${opts.selector} { animation: ${list}; }\n`;
-  }
+  css += animRule;
   css +=
     `\n${opts.selector} > .${overlayClass} {` +
     `\n  position: absolute;` +
@@ -727,7 +750,7 @@ function convertOverlayPalette(
     mode: "overlay-palette",
     duration,
     frames: frames.length,
-    animatedSlots: animNames.length,
+    animatedSlots: animated.length,
   };
 
   const result: ConvertResult = { css, meta };
