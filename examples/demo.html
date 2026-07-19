@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pixel-css — live palette demo</title>
+    <title>pixel-css — demos & examples</title>
     <style>
       body {
         font-family: system-ui, sans-serif;
@@ -11,11 +11,74 @@
         padding: 32px;
         background: #101418;
         color: #e6e6e6;
+        line-height: 1.5;
       }
-      h1 { font-size: 20px; }
-      p { max-width: 60ch; color: #aab; }
-      code { background: #222; padding: 1px 5px; border-radius: 4px; }
-      .stage { margin-top: 24px; }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #7f8ea3;
+        margin: 32px 0 12px;
+        border-bottom: 1px solid #232a33;
+        padding-bottom: 6px;
+      }
+      p {
+        max-width: 62ch;
+        color: #aab;
+      }
+      code {
+        background: #222;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .stage {
+        margin: 20px 0 8px;
+      }
+      .nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 10px;
+        max-width: 1100px;
+      }
+      .nav a {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        background: #171d24;
+        border: 1px solid #232a33;
+        border-radius: 8px;
+        padding: 12px 14px;
+        transition:
+          border-color 0.15s,
+          background 0.15s;
+      }
+      .nav a:hover {
+        border-color: #3a7afe;
+        background: #1b232d;
+      }
+      .nav .t {
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .nav .d {
+        font-size: 12px;
+        color: #8a97a8;
+        margin-top: 3px;
+      }
+      .nav .tag {
+        display: inline-block;
+        font-size: 10px;
+        font-weight: 600;
+        color: #9fd;
+        background: #0f2a24;
+        border-radius: 4px;
+        padding: 1px 6px;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
@@ -36,10 +99,91 @@
       ></pixel-image>
     </div>
 
-    <p style="margin-top: 32px">
+    <h2>Animations</h2>
+    <div class="nav">
+      <a href="waterfall/index.html">
+        <div class="t">Waterfall — palette</div>
+        <div class="d">640×286, 28 layers, background-in-keyframes. Colors cycle via <code>--color-*</code>.</div>
+      </a>
+      <a href="waterfall-1layer/index.html">
+        <div class="t">Waterfall — single layer</div>
+        <div class="d">256×114, one element, background-in-keyframes. Smoother.</div>
+      </a>
+      <a href="waterfall-1layer-static-bg/index.html">
+        <div class="t">Waterfall — background on element</div>
+        <div class="d">Single layer, static <code>background-image</code> on the element (no keyframe).</div>
+      </a>
+      <a href="waterfall-1layer-inline/index.html">
+        <div class="t">Waterfall — static colors inlined</div>
+        <div class="d">Single layer; non-animating colors written as literals, ~88% fewer <code>var()</code>.</div>
+      </a>
+      <a href="waterfall-overlay/index.html">
+        <div class="t">Waterfall — overlay</div>
+        <div class="d">Static base + a mostly-transparent overlay that animates only the moving pixels.</div>
+      </a>
+      <a href="waterfall-frames/index.html">
+        <div class="t">Waterfall — frames mode</div>
+        <div class="d">640×286, whole <code>background-image</code> swapped per frame.</div>
+      </a>
+      <a href="matrix/index.html">
+        <div class="t">Matrix — film clip</div>
+        <div class="d">256×145, first ~5s, frame-by-frame (frames mode).</div>
+      </a>
+      <a href="guybrush/index.html">
+        <div class="t">Guybrush — sprite</div>
+        <div class="d">4-frame sprite animation built from separate PNG frames.</div>
+      </a>
+    </div>
+
+    <h2>Experiments <span class="tag">side / not shipped</span></h2>
+    <p style="font-size: 13px">
+      Exploratory tests of alternative techniques. Several have an on-page FPS
+      meter (top-right) — open them in a real browser to compare performance.
+    </p>
+    <div class="nav">
+      <a href="_experiments/one-gradient/index.html">
+        <div class="t">One gradient — Mario</div>
+        <div class="d">Whole image in a single <code>linear-gradient</code> (box-decoration-break: slice) vs per-row, side by side.</div>
+      </a>
+      <a href="_experiments/one-gradient/matrix-method1.html">
+        <div class="t">Matrix — method 1 <span class="tag">fps</span></div>
+        <div class="d">One gradient per frame. Profile against method 2.</div>
+      </a>
+      <a href="_experiments/one-gradient/matrix-method2.html">
+        <div class="t">Matrix — method 2 <span class="tag">fps</span></div>
+        <div class="d">Per-row, stacked layers (the library's approach).</div>
+      </a>
+      <a href="_experiments/perrow-limits/perrow-256px-24fps.html">
+        <div class="t">Per-row limits — 256px <span class="tag">fps</span></div>
+        <div class="d">The 10m technique (per-row, single element, position-in-keyframe) @ 24fps.</div>
+      </a>
+      <a href="_experiments/perrow-limits/perrow-512px-24fps.html">
+        <div class="t">Per-row limits — 512px <span class="tag">fps</span></div>
+        <div class="d">Same, higher resolution — watch where 24fps stops holding.</div>
+      </a>
+      <a href="_experiments/method1-limits/method1-96-24fps.html">
+        <div class="t">Method 1 limits — 96px <span class="tag">fps</span></div>
+        <div class="d">One-gradient/frame ladder. Small = smooth.</div>
+      </a>
+      <a href="_experiments/method1-limits/method1-160-24fps.html">
+        <div class="t">Method 1 limits — 160px <span class="tag">fps</span></div>
+        <div class="d">One-gradient/frame, larger.</div>
+      </a>
+      <a href="_experiments/method1-limits/method1-256-24fps.html">
+        <div class="t">Method 1 limits — 256px <span class="tag">fps</span></div>
+        <div class="d">One-gradient/frame, larger still.</div>
+      </a>
+      <a href="_experiments/method1-limits/method1-640-BLANK-over-ceiling.html">
+        <div class="t">Method 1 limits — 640px (blank)</div>
+        <div class="d">Over the single-gradient ceiling — renders blank on purpose.</div>
+      </a>
+    </div>
+
+    <p style="margin-top: 32px; font-size: 13px">
       Served over http (see <code>npm run demo</code>). The
-      <code>&lt;pixel-image&gt;</code> element fetches the generated CSS + JSON,
-      builds the layer DOM in its shadow root, and exposes the palette panel.
+      <code>&lt;pixel-image&gt;</code> element above fetches the generated CSS +
+      JSON, builds the layer DOM in its shadow root, and exposes the palette
+      panel.
     </p>
 
     <!-- Registers <pixel-image> and auto-defines it. -->

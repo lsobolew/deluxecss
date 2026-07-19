@@ -20,6 +20,7 @@ const server = createServer(async (req, res) => {
   try {
     let path = decodeURIComponent((req.url ?? "/").split("?")[0] ?? "/");
     if (path === "/") path = "/examples/demo.html";
+    if (path.endsWith("/")) path += "index.html"; // directory → its index.html
     const filePath = normalize(join(root, path));
     if (!filePath.startsWith(root)) {
       res.writeHead(403).end("Forbidden");
