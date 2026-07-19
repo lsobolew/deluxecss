@@ -99,16 +99,42 @@ describe("convertAnimated", () => {
       expect((css.match(/@keyframes/g) ?? []).length).toBe(1);
       expect(css).toContain("step-end infinite");
       // each stop swaps background-image AND background-position together
-      // (position-in-keyframe binds every layer; no static frame-0 workaround)
-      expect((css.match(/% \{ background-image:/g) ?? []).length).toBe(2);
+      // (position-in-keyframe binds every layer; no static frame-0 workaround).
+      // 2 frames (0%, 50%) + an explicit terminal 100% stop = 3.
+      expect((css.match(/% \{ background-image:/g) ?? []).length).toBe(3);
       expect(
         (css.match(/background-image:[^}]*background-position:/g) ?? []).length,
-      ).toBe(2);
+      ).toBe(3);
       const beforeKeyframes = css.split("@keyframes")[0]!;
       expect(beforeKeyframes).not.toContain("background-image:");
       // palette stays controllable (colors referenced by var, not literal)
       expect(css).toMatch(/--color-0:/);
       expect(css).toContain("var(--color-");
+    });
+
+    it("pins an explicit 100% keyframe equal to the last frame (Safari fix)", () => {
+      // Without a terminal 100% stop Safari synthesises one from the element's
+      // (empty) base style and applies it across the final-frame window, contrary
+      // to step-end — background-position collapses to `0 0` and only one row
+      // paints. The 100% stop must duplicate the last authored frame.
+      const anim = frames(
+        [
+          [RED, BLUE],
+          [BLUE, RED],
+        ],
+        2,
+        1,
+      );
+      const { css } = convertAnimated(anim, { animationMode: "frames" });
+      const body = css.slice(css.indexOf("@keyframes"));
+      const stops = [...body.matchAll(/(\d+)% \{ background-image: (.*?); background-position: (.*?); \}/g)];
+      expect(stops.length).toBe(3);
+      const last = stops.at(-1)!;
+      const prev = stops.at(-2)!;
+      expect(last[1]).toBe("100"); // terminal keyframe is at 100%
+      // 100% duplicates the last authored frame (same image + position)
+      expect(last[2]).toBe(prev[2]);
+      expect(last[3]).toBe(prev[3]);
     });
 
     it("emits the will-change hint by default, and omits it when disabled", () => {
@@ -181,7 +207,9 @@ describe("convertAnimated", () => {
       // one overlay layer, frame-swapped
       expect(css).toContain("@keyframes pxc-overlay");
       expect(css).toMatch(/animation: pxc-overlay/);
-      expect((css.match(/% \{ background-image:/g) ?? []).length).toBe(2);
+      // 2 frames (0%, 50%) + an explicit terminal 100% stop (Safari fix) = 3.
+      expect((css.match(/% \{ background-image:/g) ?? []).length).toBe(3);
+      expect(css).toMatch(/100% \{ background-image:/);
       // overlay has a static frame-0 background too (reduced-motion fallback)
       expect(css).toMatch(/__layer \{[\s\S]*background-image:/);
     });

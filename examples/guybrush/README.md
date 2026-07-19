@@ -41,5 +41,20 @@ frames**. This is the ideal case for the library: tiny, few colors, few frames.
   25%  { background-image: /* frame 2 */; background-position: 0 0, 0 1px, /* … */; }
   50%  { background-image: /* frame 3 */; background-position: 0 0, 0 1px, /* … */; }
   75%  { background-image: /* frame 4 */; background-position: 0 0, 0 1px, /* … */; }
+  100% { background-image: /* frame 4 */; background-position: 0 0, 0 1px, /* … */; }
 }
 ```
+
+## Gotcha — the explicit `100%` keyframe
+
+Note that `100%` repeats the last frame. It looks redundant (with `step-end`
+the last frame already holds from 75% to the loop), but it is **required for
+Safari**. Without an authored `100%` stop, Safari synthesises one from the
+element's base style — which in frames mode has no `background-image` /
+`background-position` — and, contrary to `step-end`, applies that empty base
+across the whole final-frame window `[75%, 100%)`. `background-position`
+collapses to `0 0`, so all the row gradients stack on top of each other and only
+**one line** paints for the last quarter of every loop. Pinning the last frame
+at `100%` gives Safari a defined end state and the glitch disappears. The
+library emits this terminal keyframe automatically for every `step-end`
+animation (frames, overlay, and palette modes).

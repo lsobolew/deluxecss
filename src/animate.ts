@@ -284,13 +284,23 @@ function convertFrameSwap(
     bgFor: (f: number) => string,
     position: string,
   ): string => {
-    const stops = framePct
-      .map(
-        (pct, f) =>
-          `  ${pct}% { background-image: ${bgFor(f)}; background-position: ${position}; }`,
-      )
-      .join("\n");
-    return `@keyframes ${name} {\n${stops}\n}`;
+    const stops = framePct.map(
+      (pct, f) =>
+        `  ${pct}% { background-image: ${bgFor(f)}; background-position: ${position}; }`,
+    );
+    // Explicit terminal keyframe. Without a 100% stop Safari synthesises one from
+    // the element's base style — which in frames mode has no background-image /
+    // -position — and, contrary to step-end, applies that empty base across the
+    // whole final-frame window [lastPct, 100%). background-position collapses to
+    // `0 0`, so all row gradients stack at the top and only one line paints.
+    // Pinning the last frame at 100% keeps a defined end state.
+    const last = frames.length - 1;
+    if (framePct[last] !== 100) {
+      stops.push(
+        `  100% { background-image: ${bgFor(last)}; background-position: ${position}; }`,
+      );
+    }
+    return `@keyframes ${name} {\n${stops.join("\n")}\n}`;
   };
 
   let css = baseCss + "\n";
@@ -491,10 +501,17 @@ function convertOverlay(
 
   const stops: string[] = [];
   let elapsed = 0;
+  let lastPct = 0;
   for (let f = 0; f < frames.length; f++) {
     const pct = f === 0 ? 0 : round((elapsed / totalDelay) * 100);
     stops.push(`  ${pct}% { background-image: ${overlayBg[f]!}; }`);
+    lastPct = pct;
     elapsed += delays[f] ?? 0;
+  }
+  // Explicit terminal keyframe so Safari doesn't synthesise 100% from the base
+  // style and flash frame 0 across the final-frame window (see frames mode).
+  if (lastPct !== 100) {
+    stops.push(`  100% { background-image: ${overlayBg[frames.length - 1]!}; }`);
   }
 
   let css = baseCss + "\n";
@@ -705,12 +722,19 @@ function convertOverlayPalette(
       names.push(name);
       const kfStops: string[] = [];
       let prev: string | null = null;
+      let lastPct = 0;
       for (let f = 0; f < t.seq.length; f++) {
         const color = tokenToColor(t.seq[f]!);
         if (color !== prev) {
           kfStops.push(`  ${framePct[f]}% { --${opts.cssVarPrefix}-${t.idx}: ${color}; }`);
           prev = color;
+          lastPct = framePct[f]!;
         }
+      }
+      // Explicit 100% holding the last color (Safari otherwise synthesises it
+      // from the static palette base and flashes the wrong color per cycle).
+      if (lastPct !== 100 && prev !== null) {
+        kfStops.push(`  100% { --${opts.cssVarPrefix}-${t.idx}: ${prev}; }`);
       }
       kfBlocks.push(`@keyframes ${name} {\n${kfStops.join("\n")}\n}`);
     }
@@ -731,15 +755,16 @@ function convertOverlayPalette(
       const group = animated.slice(g, g + groupSize);
       const name = `pxc-g${g / groupSize}`;
       names.push(name);
-      const stops = framePct
-        .map(
-          (pct, f) =>
-            `  ${pct}% { ${group
-              .map((t) => `--${opts.cssVarPrefix}-${t.idx}: ${tokenToColor(t.seq[f]!)};`)
-              .join(" ")} }`,
-        )
-        .join("\n");
-      kfBlocks.push(`@keyframes ${name} {\n${stops}\n}`);
+      const groupStop = (f: number) =>
+        group
+          .map((t) => `--${opts.cssVarPrefix}-${t.idx}: ${tokenToColor(t.seq[f]!)};`)
+          .join(" ");
+      const stops = framePct.map((pct, f) => `  ${pct}% { ${groupStop(f)} }`);
+      // Explicit terminal keyframe holding the last frame (see per-color branch).
+      if (framePct[framePct.length - 1] !== 100) {
+        stops.push(`  100% { ${groupStop(frames.length - 1)} }`);
+      }
+      kfBlocks.push(`@keyframes ${name} {\n${stops.join("\n")}\n}`);
     }
     animRule = `\n${opts.selector} { animation: ${names
       .map((n) => `${n} ${dur} step-end infinite`)
@@ -919,14 +944,22 @@ function buildKeyframes(
   const stops: string[] = [];
   let elapsed = 0;
   let prevColor: string | null = null;
+  let lastPct = 0;
   for (let f = 0; f < seq.length; f++) {
     const color = tokenToColor(seq[f]!);
     if (color !== prevColor) {
       const pct = f === 0 ? 0 : round((elapsed / totalDelay) * 100);
       stops.push(`  ${pct}% { --${prefix}-${track}: ${color}; }`);
       prevColor = color;
+      lastPct = pct;
     }
     elapsed += delays[f] ?? 0;
+  }
+  // Explicit terminal keyframe holding the final color. Without it Safari
+  // synthesises 100% from the base (static palette) value and applies it across
+  // the last frame's window, flashing the wrong color once per cycle.
+  if (lastPct !== 100 && prevColor !== null) {
+    stops.push(`  100% { --${prefix}-${track}: ${prevColor}; }`);
   }
   return `@keyframes ${name} {\n${stops.join("\n")}\n}`;
 }
