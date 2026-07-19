@@ -202,7 +202,7 @@ pixel-css frame1.png frame2.png frame3.png frame4.png \
   --animate --anim-mode frames --duration 0.6 --scale 6 -o sprite.css
 ```
 
-See [`examples/guybrush`](examples/guybrush) — a 4-frame sprite animation built
+See [`examples/stan`](examples/stan) — a 4-frame sprite animation built
 this way — and [`examples/matrix`](examples/matrix), a live-action film clip (the
 first 5 seconds, 120 source frames sampled to 50 at 256px, played over 5s in
 `frames` mode). Frame-by-frame film is inherently heavy — even quantized to 20
@@ -296,7 +296,7 @@ Direct links:
   - held keyframe + static colors inlined as literals: <http://localhost:5173/examples/waterfall-1layer-inline/>
   - static base + animated overlay (only moving pixels repaint): <http://localhost:5173/examples/waterfall-overlay/>
 - Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
-- 4-frame sprite animation (Guybrush): <http://localhost:5173/examples/guybrush/>
+- 4-frame sprite animation (Stan): <http://localhost:5173/examples/stan/>
 - Live-action film clip, frame-by-frame (Matrix, first 5s @ 256px): <http://localhost:5173/examples/matrix/>
 
 Regenerate the waterfall examples yourself:

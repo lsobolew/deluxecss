@@ -1,7 +1,8 @@
-# Guybrush — 4-frame sprite animation
+# Stan — 4-frame sprite animation
 
-A small character sprite (44×56, scaled ×6) animated from **four separate PNG
-frames**. This is the ideal case for the library: tiny, few colors, few frames.
+Stan the fast-talking salesman (44×56, scaled ×6) animated from **four separate
+PNG frames** (`stan1.png … stan4.png`). This is the ideal case for the library:
+tiny, few colors, few frames.
 
 ## Technique
 
@@ -30,7 +31,7 @@ frames**. This is the ideal case for the library: tiny, few colors, few frames.
 ```
 
 ```css
-/* built from four PNG files: pixel-css a.png b.png c.png d.png --animate */
+/* built from four PNG files: pixel-css stan1.png stan2.png stan3.png stan4.png --animate */
 .pixel-image__layer {
   background-size: 100% var(--pixel-height);
   animation: play 0.6s step-end infinite;   /* 4 frames → 25% apart */
