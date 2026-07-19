@@ -581,21 +581,11 @@ function convertOverlayPalette(
   const opts = resolveOptions(options);
   const maxColors = options.maxColors ?? 64;
   const pixelCount = width * height;
+  const alphaT = opts.alphaThreshold;
+  const opaque = (a: number) => a !== 0 && a >= alphaT;
 
-  const palette = buildGlobalPalette(frames, width, height, maxColors);
-  const colors = palette.map((rgb) => formatColor(rgb, opts.colorFormat));
-  const transparentIndex = colors.length;
-  colors.push("transparent");
-
-  const cache = new Map<number, number>();
-  const tokenFrames = frames.map((frame) =>
-    tokenizeFrame(frame, palette, opts.alphaThreshold, cache),
-  );
-  const slot = (t: number) => (t === TRANSPARENT_TOKEN ? transparentIndex : t);
-  const tokenToColor = (t: number): string =>
-    t === transparentIndex ? "transparent" : colors[t]!;
-
-  // Changing pixels (by source-color delta) + their bounding box.
+  // Changing pixels (by source-color delta) + their bounding box — computed from
+  // the raw frames, so it's independent of any palette.
   const threshold = opts.changeThreshold;
   const changing = new Uint8Array(pixelCount);
   let minX = width,
@@ -632,6 +622,81 @@ function convertOverlayPalette(
   }
   const boxW = maxX - minX + 1;
   const boxH = maxY - minY + 1;
+
+  // Palette + per-frame tokens. By default one shared palette. With
+  // maxColorsStatic / maxColorsAnimated the static base and the changing pixels
+  // are quantized independently: a rich base (rasterized once, free at playback)
+  // and a small animated palette (cheap per-tick overlay repaint).
+  const split =
+    options.maxColorsStatic !== undefined ||
+    options.maxColorsAnimated !== undefined;
+  let colors: string[];
+  let transparentIndex: number;
+  let tokenFrames: Int32Array[];
+
+  if (split) {
+    const staticN = options.maxColorsStatic ?? maxColors;
+    const animatedN = options.maxColorsAnimated ?? maxColors;
+    // Collect samples: static = frame-0 opaque pixels that never change;
+    // animated = opaque changing pixels across every frame.
+    let sc = 0, ac = 0;
+    for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
+      if (changing[p]) {
+        for (let f = 0; f < frames.length; f++) if (opaque(frames[f]![i + 3]!)) ac++;
+      } else if (opaque(frames[0]![i + 3]!)) sc++;
+    }
+    const sSamples = new Uint8Array(Math.max(1, sc) * 4);
+    const aSamples = new Uint8Array(Math.max(1, ac) * 4);
+    let sj = 0, aj = 0;
+    for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
+      if (changing[p]) {
+        for (let f = 0; f < frames.length; f++) {
+          const fr = frames[f]!;
+          if (!opaque(fr[i + 3]!)) continue;
+          aSamples[aj] = fr[i]!; aSamples[aj + 1] = fr[i + 1]!; aSamples[aj + 2] = fr[i + 2]!; aSamples[aj + 3] = 255; aj += 4;
+        }
+      } else if (opaque(frames[0]![i + 3]!)) {
+        sSamples[sj] = frames[0]![i]!; sSamples[sj + 1] = frames[0]![i + 1]!; sSamples[sj + 2] = frames[0]![i + 2]!; sSamples[sj + 3] = 255; sj += 4;
+      }
+    }
+    const staticPal = buildPaletteFromSamples(sSamples, sc, staticN);
+    const animatedPal = buildPaletteFromSamples(aSamples, ac, animatedN);
+    const animatedBase = staticPal.length;
+    colors = [...staticPal, ...animatedPal].map((rgb) => formatColor(rgb, opts.colorFormat));
+    transparentIndex = colors.length;
+    colors.push("transparent");
+    const sCache = new Map<number, number>();
+    const aCache = new Map<number, number>();
+    tokenFrames = frames.map((frame) => {
+      const t = new Int32Array(pixelCount);
+      for (let p = 0, i = 0; p < pixelCount; p++, i += 4) {
+        const a = frame[i + 3]!;
+        if (!opaque(a)) { t[p] = TRANSPARENT_TOKEN; continue; }
+        const r = frame[i]!, g = frame[i + 1]!, b = frame[i + 2]!;
+        const key = (r << 16) | (g << 8) | b;
+        if (changing[p]) {
+          let idx = aCache.get(key);
+          if (idx === undefined) { idx = animatedBase + nearest(animatedPal, r, g, b); aCache.set(key, idx); }
+          t[p] = idx;
+        } else {
+          let idx = sCache.get(key);
+          if (idx === undefined) { idx = nearest(staticPal, r, g, b); sCache.set(key, idx); }
+          t[p] = idx;
+        }
+      }
+      return t;
+    });
+  } else {
+    const palette = buildGlobalPalette(frames, width, height, maxColors);
+    colors = palette.map((rgb) => formatColor(rgb, opts.colorFormat));
+    transparentIndex = colors.length;
+    colors.push("transparent");
+    const cache = new Map<number, number>();
+    tokenFrames = frames.map((frame) => tokenizeFrame(frame, palette, alphaT, cache));
+  }
+  const slot = (t: number) => (t === TRANSPARENT_TOKEN ? transparentIndex : t);
+  const tokenToColor = (t: number): string =>
+    t === transparentIndex ? "transparent" : colors[t]!;
 
   // Group changing pixels in the box by temporal token sequence → one animated
   // slot ("track") each, appended after the palette + transparent slots. Non-
@@ -753,7 +818,7 @@ function convertOverlayPalette(
       }
       kfBlocks.push(`@keyframes ${name} {\n${kfStops.join("\n")}\n}`);
     }
-    animRule = `\n${opts.selector} { animation: ${names
+    animRule = `\n${opts.selector} > .${overlayClass} { animation: ${names
       .map((n) => `${n} ${dur} step-end infinite`)
       .join(", ")}; }\n`;
   } else {
@@ -781,15 +846,18 @@ function convertOverlayPalette(
       }
       kfBlocks.push(`@keyframes ${name} {\n${stops.join("\n")}\n}`);
     }
-    animRule = `\n${opts.selector} { animation: ${names
+    animRule = `\n${opts.selector} > .${overlayClass} { animation: ${names
       .map((n) => `${n} ${dur} step-end infinite`)
       .join(", ")}; }\n`;
   }
 
   let css = baseCss + "\n";
   css += `\n${opts.selector} { position: relative; }\n`;
-  // The animation (palette cycling) lives on the container; only the overlay's
-  // gradients reference the animated slots, so only the overlay repaints.
+  // The animation lives on the OVERLAY element, not the container. The cycling
+  // custom properties then change only on the overlay, so per-tick style recalc
+  // is scoped to it — the (possibly rich, many-layer) static base is a sibling,
+  // doesn't inherit the animated vars, and isn't recalculated every frame. This
+  // is what lets maxColorsStatic stay high without tanking the frame rate.
   css += animRule;
   css +=
     `\n${opts.selector} > .${overlayClass} {` +
@@ -886,6 +954,25 @@ function buildGlobalPalette(
     width,
     height * frames.length,
   );
+  const iqPalette = buildPaletteSync([container], {
+    colorDistanceFormula: "euclidean",
+    paletteQuantization: "wuquant",
+    colors: Math.max(1, Math.floor(maxColors)),
+  });
+  return iqPalette
+    .getPointContainer()
+    .getPointArray()
+    .map((p) => [p.r, p.g, p.b] as const);
+}
+
+/** Quantize an arbitrary flat RGBA sample buffer (count pixels) to a palette. */
+function buildPaletteFromSamples(
+  samples: Uint8Array,
+  count: number,
+  maxColors: number,
+): RGB[] {
+  if (count < 1) return [];
+  const container = utils.PointContainer.fromUint8Array(samples, count, 1);
   const iqPalette = buildPaletteSync([container], {
     colorDistanceFormula: "euclidean",
     paletteQuantization: "wuquant",

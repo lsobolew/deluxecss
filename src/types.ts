@@ -8,6 +8,18 @@ export interface Options {
   maxColors?: number;
 
   /**
+   * `overlay-palette` mode only: split the color budget between the parts of the
+   * image. The **static base** is rasterized once, so its palette size costs
+   * nothing at playback — give it many colors (`maxColorsStatic`) for a crisp
+   * background. The **animated overlay** is repainted every tick, and a smaller
+   * palette there (`maxColorsAnimated`, e.g. 24) makes each repaint far cheaper.
+   * When either is set the two regions are quantized independently; when both are
+   * omitted the whole animation shares one `maxColors` palette (unchanged).
+   */
+  maxColorsStatic?: number;
+  maxColorsAnimated?: number;
+
+  /**
    * Error-diffusion dithering applied during quantization. Off by default:
    * dithering scatters isolated pixels, which destroys flat runs and can grow
    * the CSS several-fold. Only meaningful when `maxColors` is set.
@@ -182,10 +194,18 @@ export interface Options {
 export type ResolvedOptions = Required<
   Omit<
     Options,
-    "maxColors" | "emitHtml" | "resize" | "duration" | "maxFrames"
+    | "maxColors"
+    | "maxColorsStatic"
+    | "maxColorsAnimated"
+    | "emitHtml"
+    | "resize"
+    | "duration"
+    | "maxFrames"
   >
 > & {
   maxColors: number | undefined;
+  maxColorsStatic: number | undefined;
+  maxColorsAnimated: number | undefined;
   resize: number | undefined;
   maxFrames: number | undefined;
   emitHtml: boolean;

@@ -47,6 +47,8 @@ Options:
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
       --max-colors <n>        Quantize to at most n colors (default: all; anim: 64)
+      --max-colors-static <n> overlay-palette: colors for the static base (rich)
+      --max-colors-animated <n> overlay-palette: colors for the animated overlay (few)
       --dither <mode>         floyd-steinberg | atkinson (default: off)
       --alpha-threshold <n>   Alpha (0-255) below which a pixel is transparent (default: 128)
       --alpha-mode <mode>     binary | keep (default: binary)
@@ -84,6 +86,8 @@ async function main(): Promise<void> {
       resize: { type: "string" },
       "single-element": { type: "boolean" },
       "max-colors": { type: "string" },
+      "max-colors-static": { type: "string" },
+      "max-colors-animated": { type: "string" },
       dither: { type: "string" },
       "alpha-threshold": { type: "string" },
       "alpha-mode": { type: "string" },
@@ -110,6 +114,8 @@ async function main(): Promise<void> {
   const input = positionals[0]!;
   const options: Options = {
     maxColors: num(values["max-colors"]),
+    maxColorsStatic: num(values["max-colors-static"]),
+    maxColorsAnimated: num(values["max-colors-animated"]),
     dither: (values.dither as Options["dither"]) ?? false,
     alphaThreshold: num(values["alpha-threshold"]),
     alphaMode: values["alpha-mode"] as Options["alphaMode"],

@@ -70,6 +70,8 @@ pixel-css <input> [options]
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
       --max-colors <n>        Quantize to at most n colors (default: all; anim: 64)
+      --max-colors-static <n> overlay-palette: colors for the static base (rich)
+      --max-colors-animated <n> overlay-palette: colors for the cycling overlay (few)
       --dither <mode>         floyd-steinberg | atkinson (default: off)
       --alpha-threshold <n>   Alpha (0-255) below which a pixel is transparent (128)
       --alpha-mode <mode>     binary | keep (default: binary)
@@ -337,6 +339,14 @@ node examples/matrix-frames/gen.mjs        # heavy frame-by-frame (gitignored ou
   separate compositing layer, and palette animation recomputes gradients on all
   of them each tick — so a very high-resolution multi-layer palette animation can
   stutter. Overlay modes (animate only the changing region) sidestep most of this.
+- **Palette-cycle cost is style recalc, not paint.** In `overlay-palette` mode
+  the cycling custom properties are set on the **overlay** element, not the
+  container. That scopes each tick's *style recalculation* to the overlay alone;
+  the static base is a sibling, doesn't inherit the animated variables, and isn't
+  recalculated every frame. This is what makes `maxColorsStatic` /
+  `maxColorsAnimated` useful: quantize the base richly (it's rasterized once) and
+  the cycling overlay to a few colors — a crisp background with smooth animation
+  (on the waterfall, ~10 fps with one 48-color palette on the container → ~40 fps).
 
 ## License
 

@@ -215,6 +215,60 @@ describe("convertAnimated", () => {
     });
   });
 
+  describe("overlay-palette mode", () => {
+    const GREEN = [0, 255, 0, 255];
+    // pixel 0 static RED (→ base); pixel 1 cycles BLUE↔GREEN (→ animated overlay).
+    const anim = () =>
+      frames(
+        [
+          [RED, BLUE],
+          [RED, GREEN],
+        ],
+        2,
+        1,
+      );
+
+    it("puts the palette animation on the overlay, not the container", () => {
+      const { css } = convertAnimated(anim(), {
+        animationMode: "overlay-palette",
+      });
+      // the animation targets the overlay element (scopes per-tick style recalc
+      // to it, so a rich static base — a sibling — isn't recalculated each frame)
+      expect(css).toMatch(/\.pixel-image__overlay \{ animation:/);
+      // and NOT on the bare container rule
+      const containerRule = css.match(/\.pixel-image \{[^}]*\}/)?.[0] ?? "";
+      expect(containerRule).not.toContain("animation:");
+    });
+
+    it("quantizes the base and the animated pixels with separate budgets", () => {
+      // A static base with many colors, an animated pixel with few: the two
+      // regions get independent palettes so the base can stay rich cheaply.
+      const bg = [
+        [10, 20, 30, 255],
+        [40, 50, 60, 255],
+        [70, 80, 90, 255],
+        [100, 110, 120, 255],
+      ];
+      const a = frames(
+        [
+          [...bg, BLUE],
+          [...bg, GREEN],
+        ],
+        5,
+        1,
+      );
+      const rich = convertAnimated(a, {
+        animationMode: "overlay-palette",
+        maxColorsStatic: 8,
+        maxColorsAnimated: 2,
+      });
+      expect(rich.meta.animation?.mode).toBe("overlay-palette");
+      // base keeps its 4 distinct colors; animated region only needs 2
+      expect(rich.meta.colors).toContain("#0a141e");
+      expect(rich.meta.colors.length).toBeGreaterThan(4);
+    });
+  });
+
   describe("backgroundInKeyframes (folder-9 technique)", () => {
     it("single element: shares one animation list with the palette tracks", () => {
       const anim = frames(

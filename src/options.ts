@@ -2,6 +2,8 @@ import type { Options, ResolvedOptions } from "./types.js";
 
 export const DEFAULTS: ResolvedOptions = {
   maxColors: undefined,
+  maxColorsStatic: undefined,
+  maxColorsAnimated: undefined,
   dither: false,
   alphaThreshold: 128,
   alphaMode: "binary",
