@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>pixel-css — Big Whoop (static image, methods & palettes)</title>
+<link rel="stylesheet" href="single.css">
+<link rel="stylesheet" href="multi.css">
+<link rel="stylesheet" href="cga.css">
+<link rel="stylesheet" href="ega.css">
+<style>
+  body{margin:0;padding:28px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
+  h1{font-size:20px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#7f8ea3;margin:28px 0 10px;border-bottom:1px solid #232a33;padding-bottom:6px}
+  .row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+  figure{margin:0}
+  figcaption{font-size:12px;color:#9aa7b8;margin-top:8px;line-height:1.5}
+  .sz{color:#9fd;font-family:monospace}
+  /* all renditions shown at the same display width; the pixel art fills it */
+  .frame,.orig{width:min(632px,90vw);aspect-ratio:632/144;outline:1px solid #232a33}
+  .orig{image-rendering:pixelated;display:block;height:auto}
+</style></head><body>
+  <h1>Big Whoop — <code>big_whoop.png</code> (632×144) as pure CSS</h1>
+
+  <h2>Two methods · full palette</h2>
+  <div class="row">
+    <figure>
+      <img class="orig" src="../assets/big_whoop.png" alt="original big_whoop.png">
+      <figcaption><b>Original PNG</b><br><code>image-rendering: pixelated</code><br><span class="sz">raster image</span></figcaption>
+    </figure>
+    <figure>
+    <div class="bw-single frame" role="img" aria-label="Big Whoop, Single layer (one element)"></div>
+    <figcaption><b>Single layer (one element)</b><br>175 colors · 1 layer<br><span class="sz">3.43 MB → 216 KB gzip (16×)</span></figcaption>
+  </figure>
+    <figure>
+    <div class="bw-multi frame" role="img" aria-label="Big Whoop, Multi-layer (div stack)"><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div></div>
+    <figcaption><b>Multi-layer (div stack)</b><br>175 colors · 30 layers<br><span class="sz">3.43 MB → 221 KB gzip (16×)</span></figcaption>
+  </figure>
+  </div>
+
+  <h2>Retro palettes · multi-layer</h2>
+  <div class="row">
+    <figure>
+    <div class="bw-cga frame" role="img" aria-label="Big Whoop, CGA — 4 colors"><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div><div class="bw-cga__layer"></div></div>
+    <figcaption><b>CGA — 4 colors</b><br>4 colors · 10 layers<br><span class="sz">1.15 MB → 56 KB gzip (21×)</span></figcaption>
+  </figure>
+    <figure>
+    <div class="bw-ega frame" role="img" aria-label="Big Whoop, EGA — 16 colors"><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div><div class="bw-ega__layer"></div></div>
+    <figcaption><b>EGA — 16 colors</b><br>16 colors · 17 layers<br><span class="sz">2.03 MB → 113 KB gzip (18×)</span></figcaption>
+  </figure>
+    <figure>
+      <div class="bw-multi frame" role="img" aria-label="Big Whoop, VGA 256 colors"><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div><div class="bw-multi__layer"></div></div>
+      <figcaption><b>VGA — 256 colors</b><br>175 colors · 30 layers<br><span class="sz">= full palette (image uses 175 ≤ 256)</span></figcaption>
+    </figure>
+  </div>
+</body></html>

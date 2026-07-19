@@ -163,116 +163,40 @@
       </div>
     </div>
 
-    <h2>Animations</h2>
-    <p style="font-size: 13px">
-      Every waterfall example below is generated from one source animation:
-      <a href="assets/monkey_island_waterfal.gif" style="color: #6db3ff"
-        >monkey_island_waterfal.gif</a
-      >
-      (640×286). Only the multi-layer variants render at that original size;
-      the single-layer ones are downscaled (a single element can't paint a
-      full-resolution frame).
+    <p style="font-size: 12px; color: #7f8ea3; margin-top: -4px">
+      Both Marios above are the same generated <code>assets/mario.css</code> —
+      <span style="color:#9fd;font-family:monospace">9 KB → 708 B gzip</span>. Each
+      example page shows its own CSS size (raw → gzipped).
     </p>
+
+    <h2>Examples</h2>
     <div class="nav">
-      <a href="waterfall/index.html">
-        <div class="t">Waterfall — palette</div>
-        <div class="d">640×286, 28 layers, background-in-keyframes. Colors cycle via <code>--color-*</code>.</div>
-      </a>
-      <a href="waterfall-1layer/index.html">
-        <div class="t">Waterfall — single layer</div>
-        <div class="d">256×114, one element, background-in-keyframes. Smoother.</div>
-      </a>
-      <a href="waterfall-1layer-static-bg/index.html">
-        <div class="t">Waterfall — background on element</div>
-        <div class="d">Single layer, static <code>background-image</code> on the element (no keyframe).</div>
-      </a>
-      <a href="waterfall-1layer-inline/index.html">
-        <div class="t">Waterfall — static colors inlined</div>
-        <div class="d">Single layer; non-animating colors written as literals, ~88% fewer <code>var()</code>.</div>
-      </a>
-      <a href="waterfall-overlay/index.html">
-        <div class="t">Waterfall — overlay (frames)</div>
-        <div class="d">640×286. Static base + a cropped overlay that frame-swaps only the moving region.</div>
-      </a>
-      <a href="waterfall-overlay-palette/index.html">
-        <div class="t">Waterfall — overlay (palette, per-color)</div>
-        <div class="d">640×286. Static base + palette-cycling overlay; one <code>@keyframes</code> per changing color (522 animations).</div>
-      </a>
-      <a href="waterfall-overlay-palette-combined/index.html">
-        <div class="t">Waterfall — overlay (palette, combined)</div>
-        <div class="d">Same, but ONE <code>@keyframes</code> whose every stop sets all changing colors. Heavier to init — capped at 8 frames.</div>
-      </a>
-      <a href="waterfall-frames/index.html">
-        <div class="t">Waterfall — frames mode</div>
-        <div class="d">640×286, whole <code>background-image</code> swapped per frame.</div>
-      </a>
-      <a href="waterfall-1element/index.html">
-        <div class="t">Waterfall — one element (frames) <span class="tag">~20 MB</span></div>
-        <div class="d">640×286 frame-by-frame on a <em>single</em> element (the <code>10m</code> technique), palette + per-stop unit inlined so the gradients are <code>var()</code>-free — renders in Chrome and Safari. Slow first paint.</div>
-      </a>
-      <a href="waterfall-50frames/index.html">
-        <div class="t">Waterfall — all 50 frames <span class="tag">~165 MB</span></div>
-        <div class="d">The complete loop, every GIF frame. Multi-layer so its <code>@keyframes</code> split across 11 linked <code>.css</code> files (single-element can't split). Very slow first paint; the ceiling of this technique.</div>
-      </a>
-      <a href="matrix/index.html">
-        <div class="t">Matrix — film clip</div>
-        <div class="d">256×145, first ~5s, frame-by-frame (frames mode).</div>
+      <a href="big-whoop/index.html">
+        <div class="t">Big Whoop — static image</div>
+        <div class="d">
+          <code>big_whoop.png</code> (632×144) as CSS: single-layer vs
+          multi-layer, plus CGA/EGA/VGA palettes, next to the original PNG.
+        </div>
       </a>
       <a href="stan/index.html">
-        <div class="t">Stan — sprite</div>
-        <div class="d">4-frame sprite animation built from separate PNG frames.</div>
+        <div class="t">Stan — sprite animation</div>
+        <div class="d">4-frame sprite (44×56) built from separate PNGs — the ideal case for frames mode: tiny and smooth.</div>
+      </a>
+      <a href="waterfall-colorcycle/index.html">
+        <div class="t">Waterfall — color cycling</div>
+        <div class="d">640×286 palette animation the efficient way: layered base, overlay only where pixels change, static colors inlined. Original GIF alongside.</div>
+      </a>
+      <a href="matrix-frames/index.html">
+        <div class="t">Matrix — frame limits <span class="tag">~66 MB</span></div>
+        <div class="d">A few seconds of film, high color fidelity, multi-layer split across files. Where frame-by-frame animation strains. Run its <code>gen.mjs</code> first.</div>
       </a>
     </div>
 
     <h2>Experiments <span class="tag">side / not shipped</span></h2>
-    <p style="font-size: 13px">
-      Exploratory tests of alternative techniques. Several have an on-page FPS
-      meter (top-right) — open them in a real browser to compare performance.
-    </p>
     <div class="nav">
       <a href="_experiments/one-gradient/index.html">
         <div class="t">One gradient — Mario</div>
-        <div class="d">Whole image in a single <code>linear-gradient</code> (box-decoration-break: slice) vs per-row, side by side.</div>
-      </a>
-      <a href="_experiments/one-gradient/matrix-method1.html">
-        <div class="t">Matrix — method 1 <span class="tag">fps</span></div>
-        <div class="d">One gradient per frame. Profile against method 2.</div>
-      </a>
-      <a href="_experiments/one-gradient/matrix-method2.html">
-        <div class="t">Matrix — method 2 <span class="tag">fps</span></div>
-        <div class="d">Per-row, stacked layers (the library's approach).</div>
-      </a>
-      <a href="_experiments/tile-size/index.html">
-        <div class="t">Tile size / shape <span class="tag">fps</span></div>
-        <div class="d">Same clip tiled 8 ways (full-width strips vs 2D tiles) — find the optimal tile for playback.</div>
-      </a>
-      <a href="_experiments/palette-grouping/index.html">
-        <div class="t">Palette keyframe grouping <span class="tag">fps</span></div>
-        <div class="d">Same clip, palette cycling grouped 5 ways: 479×1 color vs 40×12 vs 1×479 — compare first-paint & FPS.</div>
-      </a>
-      <a href="_experiments/perrow-limits/perrow-256px-24fps.html">
-        <div class="t">Per-row limits — 256px <span class="tag">fps</span></div>
-        <div class="d">The 10m technique (per-row, single element, position-in-keyframe) @ 24fps.</div>
-      </a>
-      <a href="_experiments/perrow-limits/perrow-512px-24fps.html">
-        <div class="t">Per-row limits — 512px <span class="tag">fps</span></div>
-        <div class="d">Same, higher resolution — watch where 24fps stops holding.</div>
-      </a>
-      <a href="_experiments/method1-limits/method1-96-24fps.html">
-        <div class="t">Method 1 limits — 96px <span class="tag">fps</span></div>
-        <div class="d">One-gradient/frame ladder. Small = smooth.</div>
-      </a>
-      <a href="_experiments/method1-limits/method1-160-24fps.html">
-        <div class="t">Method 1 limits — 160px <span class="tag">fps</span></div>
-        <div class="d">One-gradient/frame, larger.</div>
-      </a>
-      <a href="_experiments/method1-limits/method1-256-24fps.html">
-        <div class="t">Method 1 limits — 256px <span class="tag">fps</span></div>
-        <div class="d">One-gradient/frame, larger still.</div>
-      </a>
-      <a href="_experiments/method1-limits/method1-640-BLANK-over-ceiling.html">
-        <div class="t">Method 1 limits — 640px (blank)</div>
-        <div class="d">Over the single-gradient ceiling — renders blank on purpose.</div>
+        <div class="d">The whole image in a <em>single</em> <code>linear-gradient</code> on a wrapping inline run (<code>box-decoration-break: slice</code>), next to the per-row version.</div>
       </a>
     </div>
 

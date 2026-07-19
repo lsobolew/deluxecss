@@ -126,7 +126,7 @@ Drop the CSS in and add one element:
 ```
 
 That's it — the waterfall loops forever, in pure CSS. See
-[`examples/waterfall`](examples/waterfall) (generated from a Monkey Island GIF).
+[`examples/waterfall-colorcycle`](examples/waterfall-colorcycle) (generated from a Monkey Island GIF).
 
 #### Two animation modes
 
@@ -156,7 +156,7 @@ That's it — the waterfall loops forever, in pure CSS. See
   overlay layer that defines just the changing pixels (frame-swapped). Every
   frame the browser repaints only the small moving region; the static base is
   rasterized once. Best when a small part of the scene moves over a still
-  background (a waterfall, a flickering light). See `examples/waterfall-overlay`.
+  background (a waterfall, a flickering light). See `examples/waterfall-colorcycle`.
 
 ```sh
 # frame-swap animation, sampled to 12 frames, scaled up
@@ -167,9 +167,8 @@ pixel-css waterfall.gif --animate --anim-mode frames \
 
 In both modes the palette stays controllable: colors are `--color-*` variables,
 so you can still recolor the whole animation by overriding them. See
-[`examples/waterfall`](examples/waterfall) (palette mode) and
-[`examples/waterfall-frames`](examples/waterfall-frames) (frames mode, original
-resolution).
+[`examples/waterfall-colorcycle`](examples/waterfall-colorcycle) (palette/overlay
+mode) and [`examples/matrix-frames`](examples/matrix-frames) (frames mode).
 
 Large images render fine in `frames` mode: the rows are spread across several
 stacked `<div>` layers (each with its own synchronized `@keyframes`), so no
@@ -190,8 +189,8 @@ own compositing layer (reinforced by `will-change`), even for a still image. It
 composes with palette animation — the background layout is *held* while the
 `--color-*` values cycle — so you get the layer-promotion benefit and a live
 palette at once. For large images each stacked layer gets its own held keyframe,
-so it works at full resolution. (`examples/waterfall` uses this at the source
-GIF's original 640×286 resolution.)
+so it works at full resolution. (`examples/waterfall-colorcycle` renders at the
+source GIF's original 640×286 resolution.)
 
 #### Building an animation from separate frame files
 
@@ -203,10 +202,10 @@ pixel-css frame1.png frame2.png frame3.png frame4.png \
 ```
 
 See [`examples/stan`](examples/stan) — a 4-frame sprite animation built
-this way — and [`examples/matrix`](examples/matrix), a live-action film clip (the
-first 5 seconds, 120 source frames sampled to 50 at 256px, played over 5s in
-`frames` mode). Frame-by-frame film is inherently heavy — even quantized to 20
-colors it is ~31 MB — so it's a stress test, not a recommended use; pixel art and
+this way — and [`examples/matrix-frames`](examples/matrix-frames), a live-action
+film clip (a few seconds, 256px, high color fidelity, multi-layer split across
+files). Frame-by-frame film is inherently heavy — ~66 MB there — so it's a stress
+test, not a recommended use; pixel art and
 low-color animation are where this shines.
 
 ### Options
@@ -286,30 +285,21 @@ example. The demo server injects a small enhancer into each page: an **FPS meter
 `README.md` — technique, pros and cons — as a slide-in panel (append `#readme` to
 the URL to open it directly). The generated files themselves stay untouched.
 
-Direct links:
+Each example page shows its own CSS size (raw → gzipped). Direct links:
 
-- Widget + live palette panel: <http://localhost:5173/examples/demo.html>
-- Animated waterfall, palette mode, original 640×286 (28 layers): <http://localhost:5173/examples/waterfall/>
-- Single layer (256×114), variants to compare playback:
-  - background-image on the element: <http://localhost:5173/examples/waterfall-1layer-static-bg/>
-  - background-image in a held `@keyframes` (+ `will-change`): <http://localhost:5173/examples/waterfall-1layer/>
-  - held keyframe + static colors inlined as literals: <http://localhost:5173/examples/waterfall-1layer-inline/>
-  - static base + animated overlay (only moving pixels repaint): <http://localhost:5173/examples/waterfall-overlay/>
-- Animated waterfall, frames mode, original resolution: <http://localhost:5173/examples/waterfall-frames/>
-- 4-frame sprite animation (Stan): <http://localhost:5173/examples/stan/>
-- Live-action film clip, frame-by-frame (Matrix, first 5s @ 256px): <http://localhost:5173/examples/matrix/>
+- Widget + live palette panel, and the pure-CSS Mario/Luigi swap: <http://localhost:5173/examples/demo.html>
+- Big Whoop — static image (single- vs multi-layer, CGA/EGA/VGA, vs original PNG): <http://localhost:5173/examples/big-whoop/>
+- Stan — 4-frame sprite animation: <http://localhost:5173/examples/stan/>
+- Waterfall — color cycling, original 640×286 (layered base + cropped overlay + inlined colors), next to the original GIF: <http://localhost:5173/examples/waterfall-colorcycle/>
+- Matrix — the limits of frame-by-frame animation (heavy; run its `gen.mjs` first): <http://localhost:5173/examples/matrix-frames/>
+- Experiment — the whole of Mario in one wrapping `linear-gradient`: <http://localhost:5173/examples/_experiments/one-gradient/>
 
-Regenerate the waterfall examples yourself:
+Several examples carry a `gen.mjs` that (re)generates their CSS — e.g.:
 
 ```sh
-# original 640x286, spread across ~28 stacked layers
-pixel-css monkey_island_waterfal.gif --animate --max-colors 48 \
-  --bg-in-keyframes --sizing pixel -o examples/waterfall/waterfall.css
-
-# single layer, 256x114 scaled 2x — fewer composited layers, smoother playback
-pixel-css monkey_island_waterfal.gif --animate --resize 256 --max-colors 48 \
-  --bg-in-keyframes --single-element --sizing pixel --scale 2 \
-  -o examples/waterfall-1layer/waterfall.css
+node examples/big-whoop/gen.mjs           # static image, all methods & palettes
+node examples/waterfall-colorcycle/gen.mjs # color-cycling waterfall
+node examples/matrix-frames/gen.mjs        # heavy frame-by-frame (gitignored output)
 ```
 
 ## Notes & tradeoffs
@@ -332,16 +322,21 @@ pixel-css monkey_island_waterfal.gif --animate --resize 256 --max-colors 48 \
   constant colors as literal hex in the gradients and keeps only the *animating*
   colors as `--color-*` variables — cutting `var()` references dramatically (in the
   waterfall example, ~35.7k → ~4.2k). The animating colors stay controllable; the
-  inlined ones no longer are. See `examples/waterfall-1layer-inline`.
-- **Layers vs. playback smoothness.** A single element can only hold so much
-  background before the browser fails to paint it (roughly ~256px wide for a
-  detailed scene — beyond that it renders blank), which is why large images are
-  split across stacked layers. But every layer with `will-change` is a separate
-  compositing layer, and palette animation recomputes gradients on all of them
-  each tick — so a high-resolution multi-layer animation can stutter. If playback
-  matters more than resolution, prefer `--single-element` at a size that still
-  paints (see the `waterfall-1layer` example): one compositing layer and far
-  fewer pixels to recompute means much smoother animation.
+  inlined ones no longer are. See `examples/waterfall-colorcycle`.
+- **Why large images are split across layers.** A single element packs every
+  row into one `background-image` value. Chrome/Blink stops substituting custom
+  properties past ~50,000 `var()` references in a single value — over that it
+  drops the declaration and the element renders **blank** (WebKit doesn't).
+  Ordinary output uses one `var(--pixel-width)` per stop, so a wide single
+  element blows the limit. Two fixes: `--inline-palette` makes the gradients
+  var-free (literal colors + `calc(100% / W * n)` stops), so a single element
+  renders at much larger sizes; and multi-layer splits the rows across elements,
+  keeping each value small. It is *not* a pixel-width or CSS-value-length cap —
+  only the var() count per value (measured in `examples/matrix-frames`).
+- **Layers vs. playback smoothness.** Every layer with `will-change` is a
+  separate compositing layer, and palette animation recomputes gradients on all
+  of them each tick — so a very high-resolution multi-layer palette animation can
+  stutter. Overlay modes (animate only the changing region) sidestep most of this.
 
 ## License
 
