@@ -63,6 +63,22 @@ animation across files this way is not possible; only multi-layer output splits
 (see `waterfall-50frames`), because there each layer is a separate, literal
 `@keyframes` rule.
 
+## Dead end: one animation per frame
+
+Another split idea: make each frame its own `@keyframes` (its own file) and have
+the element run them all with staggered `animation-delay`, so animation N shows
+frame N during its slice.
+
+Tested: a **single pass** works — finite animations (`… 1s 1 forwards`) staggered
+by delay do sequence the frames correctly (frame 0, then 1, then 2, …), and the
+data really is split across files. But it **cannot loop** in pure CSS. To repeat,
+every animation has to be running at once, and concurrent animations on the *same
+property* of the *same element* resolve by list order — the last active one wins,
+not the one whose time slice it is. So on loop only the last animation's frame
+shows and the rest paint blank. Multi-layer avoids this precisely because each
+layer is a *separate element*: its `@keyframes` loops on its own with nothing
+else competing for its `background-image`.
+
 ## Pros / cons
 
 - **Pro:** no extra DOM, no palette, closest to the raw "image as one CSS value"
