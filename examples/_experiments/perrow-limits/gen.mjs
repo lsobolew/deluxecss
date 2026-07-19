@@ -99,7 +99,7 @@ const html = `<!doctype html>
   #fps { position:fixed; top:8px; right:12px; z-index:10; font:600 16px monospace;
          color:#0f0; background:#000a; padding:4px 8px; border:1px solid #0f0; border-radius:4px; }
   .img {
-    --u: 1px;
+    --u: ${ROWH}px;   /* horizontal pixel = vertical pixel (ROWH) → square pixels, correct aspect */
     width: calc(var(--u) * ${W}); height: ${H * ROWH}px; margin: 8px 12px;
     background-repeat: no-repeat; background-size: 100% ${ROWH}px;
     animation: play ${duration}s steps(${N}) infinite; will-change: background-image;
