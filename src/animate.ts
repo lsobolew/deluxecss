@@ -852,7 +852,12 @@ function convertOverlayPalette(
   }
 
   let css = baseCss + "\n";
-  css += `\n${opts.selector} { position: relative; }\n`;
+  // `contain: strict` on the container and the overlay: both have explicit sizes
+  // (width + aspect-ratio; the overlay is a fixed calc box), so size containment
+  // is safe, and it walls off the base's and overlay's layout/paint from each
+  // other. It's frame-rate-neutral today but lets the engine isolate the two
+  // subtrees — headroom for future optimization at no cost.
+  css += `\n${opts.selector} { position: relative; contain: strict; }\n`;
   // The animation lives on the OVERLAY element, not the container. The cycling
   // custom properties then change only on the overlay, so per-tick style recalc
   // is scoped to it — the (possibly rich, many-layer) static base is a sibling,
@@ -862,6 +867,7 @@ function convertOverlayPalette(
   css +=
     `\n${opts.selector} > .${overlayClass} {` +
     `\n  position: absolute;` +
+    `\n  contain: strict;` +
     `\n  left: calc(var(--pixel-width) * ${minX});` +
     `\n  top: calc(var(--pixel-height) * ${minY});` +
     `\n  width: calc(var(--pixel-width) * ${boxW});` +
