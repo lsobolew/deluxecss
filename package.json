@@ -27,7 +27,7 @@
     "quantize"
   ],
   "bin": {
-    "deluxecss": "./dist/cli.js"
+    "deluxecss": "dist/cli.js"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
