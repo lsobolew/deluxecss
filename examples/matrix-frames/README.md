@@ -4,10 +4,9 @@ A few seconds of the Matrix clip as pure CSS, frame by frame, at high colour
 fidelity (up to 256 colours — not the tight palette the other examples use). This
 is the "how far does frames mode go?" demo: it works, but you feel every cost.
 
-Generated (recipe committed, the ~193 MB of CSS is not — run `gen.mjs`). Drop
-your own frame PNGs (`matrix_000.png … matrix_215.png`) into
-`examples/assets/matrix/` first — they aren't shipped (heavy, and it's a
-stress test):
+The source frames (`matrix_000.png … matrix_215.png`) are committed in
+`examples/assets/matrix/`, downscaled to 256px wide — exactly what the demo
+renders. The ~193 MB of generated CSS is not committed; build it with:
 
 ```
 node examples/matrix-frames/gen.mjs

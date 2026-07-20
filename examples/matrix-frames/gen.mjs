@@ -9,8 +9,8 @@ import { fileURLToPath } from "node:url";
 import { sizeText, backLink, cmdBlock, CLI } from "../../scripts/example-utils.mjs";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
-// Supply your own frame PNGs (matrix_000.png … matrix_215.png) in this folder,
-// then run this script. They aren't shipped (heavy, and it's a stress test).
+// The source frames (matrix_000.png … matrix_215.png, downscaled to 256px wide)
+// are committed in this folder; this script builds the ~193 MB of CSS from them.
 const framesDir = fileURLToPath(new URL("../assets/matrix/", import.meta.url));
 const N = 216;           // 9 s at 24 fps
 const TARGET_MB = 25;
