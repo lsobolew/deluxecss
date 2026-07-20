@@ -42,7 +42,10 @@ npm install pixel-css
 
 Requires Node ≥ 18. Uses [`sharp`](https://sharp.pixelplumbing.com/) for decoding
 (PNG/JPEG/WebP/GIF/AVIF/TIFF) and [`image-q`](https://github.com/ibezkrovnyi/image-quantization)
-for quantization.
+for quantization. **Amiga IFF ILBM/PBM** files are decoded natively (no `sharp`),
+including their `CRNG`/`CCRT` **color-cycling** ranges — with `--animate` the
+palette cycle baked into the file is reproduced exactly as a CSS animation. See
+[`examples/artificial-heart`](examples/artificial-heart).
 
 ## CLI
 
@@ -269,6 +272,7 @@ Each example page shows its own CSS size (raw → gzipped). Direct links:
 - Big Whoop — static image (single- vs multi-layer, CGA/EGA/VGA, vs original PNG): <http://localhost:5173/examples/big-whoop/>
 - Stan — 4-frame sprite animation: <http://localhost:5173/examples/stan/>
 - Waterfall — color cycling, original 640×286 (layered base + cropped overlay + inlined colors), next to the original GIF: <http://localhost:5173/examples/waterfall-colorcycle/>
+- Artificial Heart — an Amiga IFF file's native color-cycle rendered as CSS: <http://localhost:5173/examples/artificial-heart/>
 - Matrix — the limits of frame-by-frame animation (heavy; run its `gen.mjs` first): <http://localhost:5173/examples/matrix-frames/>
 - Experiment — the whole of Mario in one wrapping `linear-gradient`: <http://localhost:5173/examples/_experiments/one-gradient/>
 

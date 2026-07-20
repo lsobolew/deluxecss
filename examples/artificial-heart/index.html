@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>pixel-css — Artificial Heart (IFF color cycling)</title>
+<link rel="stylesheet" href="heart.css">
+<style>
+  body{margin:0;padding:24px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
+  h1{font-size:19px} p{max-width:64ch;color:#aab;font-size:13px}
+  .pixel-image{width:min(640px,92vw);image-rendering:pixelated}
+  .sz{color:#9fd;font-family:monospace}
+</style></head><body>
+  <h1>Artificial Heart — Amiga color cycling, pure CSS</h1>
+  <p>Decoded straight from <code>ljl_ArtificialHeart.iff</code> (IFF ILBM, 320×200,
+  32 colors). The file's <code>CCRT</code> chunk defines a palette-cycle over
+  7 entries; pixel-css reads that range and reproduces
+  the <em>exact</em> cycle — 7 frames @ 0.567s —
+  as an overlay-palette animation, with the static art inlined. No GIF, no sampling.</p>
+  <div class="pixel-image palette" role="img" aria-label="Artificial vs natural heart, Amiga color-cycling art"><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__overlay"></div></div>
+  <p class="sz">CSS: 2.13 MB → 77 KB gzip (28×)</p>
+</body></html>
