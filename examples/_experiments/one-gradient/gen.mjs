@@ -10,6 +10,7 @@
 import sharp from "sharp";
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { backLink } from "../../../scripts/example-utils.mjs";
 
 const SRC = fileURLToPath(new URL("../../../../mario2.png", import.meta.url));
 const OUT = fileURLToPath(new URL("./index.html", import.meta.url));
@@ -120,6 +121,7 @@ const html = `<!doctype html>
       <div class="box" role="img" aria-label="Mario, drawn in CSS from a single linear-gradient"><span class="strip" aria-hidden="true">${filler}</span></div>
     </figure>
   </div>
+  ${backLink(2)}
 </body></html>
 `;
 

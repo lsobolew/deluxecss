@@ -6,7 +6,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { sizeText, CLI } from "../../scripts/example-utils.mjs";
+import { sizeText, backLink, CLI } from "../../scripts/example-utils.mjs";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const framesDir = fileURLToPath(new URL("../../../10m/", import.meta.url));
@@ -56,6 +56,7 @@ ${links.join("\n")}
   parses it all before frame one, then plays.</p>
   <p class="sz">CSS: ${sizeText(paths)} · across ${files.length} files</p>
   <div class="pixel-image palette" role="img" aria-label="Matrix film clip, frame-by-frame CSS">${layers}</div>
+  ${backLink()}
 </body></html>
 `);
 

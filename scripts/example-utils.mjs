@@ -1,11 +1,25 @@
 // Shared helpers for the example generators: measure a stylesheet's raw and
 // gzipped size and render a small "CSS: raw → gzip" badge baked into the page.
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 
 export function sizeOf(path) {
   const raw = readFileSync(path);
   return { raw: raw.length, gzip: gzipSync(raw, { level: 9 }).length };
+}
+
+/** Formatted on-disk size of a file, e.g. "534 KB". */
+export function fileSize(path) {
+  return fmt(statSync(path).size);
+}
+
+/** A fixed "back to the demo hub" link (bottom-right; nothing else lives there). */
+export function backLink(depth = 1) {
+  const up = "../".repeat(depth);
+  return `<a href="${up}demo.html" style="position:fixed;right:12px;bottom:12px;` +
+    `z-index:2147483647;font:600 13px/1 system-ui,sans-serif;color:#9fd;` +
+    `background:#171d24;border:1px solid #2a3540;border-radius:8px;padding:8px 12px;` +
+    `text-decoration:none">← all demos</a>`;
 }
 
 export function fmt(bytes) {

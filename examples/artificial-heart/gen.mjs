@@ -6,7 +6,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { sizeText, CLI } from "../../scripts/example-utils.mjs";
+import { sizeText, backLink, CLI } from "../../scripts/example-utils.mjs";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const iff = fileURLToPath(new URL("../assets/ljl_ArtificialHeart.iff", import.meta.url));
@@ -39,6 +39,6 @@ writeFileSync(`${dir}/index.html`, `<!doctype html>
   <p class="sz">CSS: ${sizeText(css)}</p>
   <p style="font-size:12px;color:#7f8ea3">Original Amiga artwork by
     <a href="https://amiga.lychesis.net/artists/JackHaeger.html" style="color:#6db3ff">Jack Haeger</a>.</p>
-</body></html>
-`);
+  ${backLink()}
+</body></html>`);
 console.log(`artificial-heart: ${m.layerCount} layers, ${m.animation.animatedSlots} cycling slots, ${m.animation.frames} frames, CSS ${sizeText(css)}`);

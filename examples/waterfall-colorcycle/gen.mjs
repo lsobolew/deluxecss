@@ -7,7 +7,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { sizeText, CLI } from "../../scripts/example-utils.mjs";
+import { sizeText, fileSize, backLink, CLI } from "../../scripts/example-utils.mjs";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const gif = fileURLToPath(new URL("../assets/monkey_island_waterfal.gif", import.meta.url));
@@ -55,9 +55,10 @@ writeFileSync(`${dir}/index.html`, `<!doctype html>
     </figure>
     <figure>
       <img class="orig" src="../assets/monkey_island_waterfal.gif" alt="original waterfall GIF">
-      <figcaption><b>Original GIF</b><br><span class="sz">for comparison</span></figcaption>
+      <figcaption><b>Original GIF</b><br><span class="sz">file: ${fileSize(gif)}</span></figcaption>
     </figure>
   </div>
+  ${backLink()}
 </body></html>
 `);
 console.log(`waterfall-colorcycle: ${m.layerCount} layers, ${m.animation.animatedSlots} slots, CSS ${sizeText(css)}`);

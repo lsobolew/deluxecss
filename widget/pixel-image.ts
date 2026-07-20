@@ -170,8 +170,6 @@ export class PixelImage extends HTMLElement {
       </div>
       <div class="px-actions">
         <button data-reset>Reset</button>
-        <button data-copy>Copy CSS</button>
-        <button data-download>Download JSON</button>
       </div>
     </div>`;
   }
@@ -210,12 +208,6 @@ export class PixelImage extends HTMLElement {
     this.root
       .querySelector("[data-reset]")
       ?.addEventListener("click", () => this.reset(meta));
-    this.root
-      .querySelector("[data-copy]")
-      ?.addEventListener("click", () => void this.copyCss(meta));
-    this.root
-      .querySelector("[data-download]")
-      ?.addEventListener("click", () => this.downloadJson(meta));
   }
 
   private reset(meta: WidgetMeta): void {
@@ -268,27 +260,6 @@ export class PixelImage extends HTMLElement {
   /** The current palette as a plain array. */
   exportPalette(): string[] {
     return [...this.currentColors];
-  }
-
-  private async copyCss(meta: WidgetMeta): Promise<void> {
-    const css = this.exportCss(`.${meta.selector.replace(/^\./, "")}, .palette`);
-    try {
-      await navigator.clipboard.writeText(css);
-    } catch {
-      console.log(css);
-    }
-  }
-
-  private downloadJson(_meta: WidgetMeta): void {
-    const blob = new Blob([JSON.stringify(this.currentColors, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "palette.json";
-    a.click();
-    URL.revokeObjectURL(url);
   }
 }
 
