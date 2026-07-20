@@ -2,7 +2,7 @@
 
 **Turn an image into pure CSS pixel-art with a live, controllable color palette.**
 
-> ▶ **Live demo:** _coming soon — will be published on GitHub Pages_
+> ▶ **Live demo:** **https://lsobolew.github.io/deluxecss/**
 >
 > The demo shows sprites and Amiga color-cycling scenes running as **pure CSS —
 > no GIF, no base64, no JavaScript**. (This README can't run them: GitHub strips
