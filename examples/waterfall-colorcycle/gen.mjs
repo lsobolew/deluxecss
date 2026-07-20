@@ -38,8 +38,8 @@ writeFileSync(`${dir}/index.html`, `<!doctype html>
   figure{margin:0}
   figcaption{font-size:12px;color:#9aa7b8;margin-top:8px;line-height:1.5}
   .sz{color:#9fd;font-family:monospace}
-  .pixel-image{width:min(640px,92vw)}
-  .orig{width:min(640px,92vw);aspect-ratio:640/286;image-rendering:pixelated;display:block}
+  .pixel-image{width:min(640px,92vw);zoom:2}
+  .orig{width:min(640px,92vw);aspect-ratio:640/286;image-rendering:pixelated;display:block;zoom:2}
 </style></head><body>
   <h1>Waterfall — color cycling, pure CSS</h1>
   <p>Palette animation the efficient way, native 640×286: a layered static base

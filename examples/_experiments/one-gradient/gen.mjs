@@ -71,7 +71,7 @@ const html = `<!doctype html>
   body { margin: 0; background: #222; color: #eee; font-family: system-ui, sans-serif; }
   /* the ch unit only means the right thing where the monospace font applies */
   .row { display: flex; gap: 40px; align-items: flex-start; margin: 24px;
-         font-family: monospace; font-size: ${S}px; }
+         font-family: monospace; font-size: ${S}px; zoom: 2; }
   figcaption { font-size: 13px; margin-bottom: 8px; color: #bbb; font-family: system-ui, sans-serif; }
   code { color: #9cf; }
 

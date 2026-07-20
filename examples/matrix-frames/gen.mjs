@@ -46,7 +46,7 @@ ${links.join("\n")}
 <style>
   body{margin:0;padding:24px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
   h1{font-size:19px} p{max-width:64ch;color:#aab;font-size:13px}
-  .pixel-image{width:min(512px,92vw);margin-top:14px}
+  .pixel-image{width:min(512px,92vw);margin-top:14px;zoom:2}
   .sz{color:#9fd;font-family:monospace}
 </style></head><body>
   <h1>Matrix — ${N} frames (${(N / 24).toFixed(1)} s @ 24 fps)</h1>

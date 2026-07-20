@@ -56,6 +56,7 @@ const standalone = (slug, cssFile, sel, layers, title, sub) => {
   h1{font-size:17px} figcaption{font-size:12px;color:#9aa7b8;margin-top:8px}
   .sz{color:#9fd;font-family:monospace}
   ${FRAME_CSS}
+  .frame{zoom:2}
 </style></head><body>
   <h1>Big Whoop — ${title}</h1>
   <figure style="margin:0">
