@@ -24,6 +24,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build # build the CLI (dist/) — gen.mjs shells out to it
+      - run: node examples/matrix-frames/gen.mjs # generate the matrix demo from committed frames
       - run: node scripts/build-pages.mjs
       - uses: actions/configure-pages@v5
         with:

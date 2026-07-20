@@ -1,5 +1,6 @@
-# Drop source frame PNGs here (matrix_000.png … matrix_215.png), then run
-#   node examples/matrix-frames/gen.mjs
-# They're not committed (heavy, and this is a stress test).
+# Source frames for the matrix-frames demo, downscaled to 256px wide (exactly
+# what the demo renders — the CLI's --resize 256 is then a no-op). Committed so
+# CI can generate the demo. Anything else dropped here stays ignored.
 *
 !.gitignore
+!matrix_*.png
