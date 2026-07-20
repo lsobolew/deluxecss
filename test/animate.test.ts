@@ -79,7 +79,11 @@ describe("convertAnimated", () => {
     // background painted on the container, no child-layer rule
     expect(css).toContain(".pixel-image {");
     expect(css).not.toContain("__layer:nth-child");
-    expect(html).toBe('<div class="pixel-image palette"></div>');
+    // the example page is complete (links a stylesheet) and has no child layers
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain('<link rel="stylesheet"');
+    expect(html).toContain('<div class="pixel-image palette"></div>');
+    expect(html).not.toContain("__layer");
   });
 
   describe("frames mode (background-image swap)", () => {
@@ -238,6 +242,16 @@ describe("convertAnimated", () => {
       // and NOT on the bare container rule
       const containerRule = css.match(/\.pixel-image \{[^}]*\}/)?.[0] ?? "";
       expect(containerRule).not.toContain("animation:");
+    });
+
+    it("emitHtml includes the overlay element (complete page)", () => {
+      const { html } = convertAnimated(anim(), {
+        animationMode: "overlay-palette",
+        emitHtml: true,
+      });
+      expect(html).toContain("<!doctype html>");
+      expect(html).toContain('<link rel="stylesheet"');
+      expect(html).toContain("__overlay");
     });
 
     it("quantizes the base and the animated pixels with separate budgets", () => {

@@ -195,6 +195,8 @@ export interface Meta {
   selector: string;
   /** Class name applied to each stacked background layer. */
   layerClass: string;
+  /** True when the image is painted on the container itself (no child layers). */
+  singleElement: boolean;
   /** Whether the palette contains a `transparent` slot. */
   hasAlpha: boolean;
   /** Present only for animated conversions. */

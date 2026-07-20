@@ -1,6 +1,7 @@
 import { buildPaletteSync, utils } from "image-q";
 import { buildCss } from "./css.js";
 import { decodeFrames } from "./decode.js";
+import { buildExampleHtml } from "./html.js";
 import { packLayers } from "./layers.js";
 import { buildMeta } from "./meta.js";
 import { buildRowGradients } from "./rle.js";
@@ -9,6 +10,7 @@ import type {
   ConvertResult,
   DecodedFrames,
   IndexedImage,
+  Meta,
   Options,
 } from "./types.js";
 
@@ -151,9 +153,7 @@ export function convertAnimated(
   };
 
   const result: ConvertResult = { css, meta };
-  if (opts.emitHtml) {
-    result.html = buildHtml(meta.selector, layerClass, layers.length, opts.singleElement);
-  }
+  if (opts.emitHtml) result.html = exampleHtml(meta);
   return result;
 }
 
@@ -337,14 +337,7 @@ function convertFrameSwap(
   };
 
   const result: ConvertResult = { css, meta };
-  if (opts.emitHtml) {
-    result.html = buildHtml(
-      meta.selector,
-      layerClass,
-      layerCount,
-      opts.singleElement,
-    );
-  }
+  if (opts.emitHtml) result.html = exampleHtml(meta);
   return result;
 }
 
@@ -533,16 +526,7 @@ function convertOverlay(
   meta.animation = { mode: "overlay", duration, frames: frames.length };
 
   const result: ConvertResult = { css, meta };
-  if (opts.emitHtml) {
-    const baseClass = meta.selector.replace(/^\./, "");
-    const layerDivs = Array.from(
-      { length: baseLayers.length },
-      () => `  <div class="${layerClass}"></div>`,
-    ).join("\n");
-    result.html =
-      `<div class="${baseClass} palette">\n${layerDivs}\n` +
-      `  <div class="${overlayClass}"></div>\n</div>`;
-  }
+  if (opts.emitHtml) result.html = exampleHtml(meta);
   return result;
 }
 
@@ -838,16 +822,7 @@ function convertOverlayPalette(
   };
 
   const result: ConvertResult = { css, meta };
-  if (opts.emitHtml) {
-    const baseClass = meta.selector.replace(/^\./, "");
-    const layerDivs = Array.from(
-      { length: baseLayers.length },
-      () => `  <div class="${layerClass}"></div>`,
-    ).join("\n");
-    result.html =
-      `<div class="${baseClass} palette">\n${layerDivs}\n` +
-      `  <div class="${overlayClass}"></div>\n</div>`;
-  }
+  if (opts.emitHtml) result.html = exampleHtml(meta);
   return result;
 }
 
@@ -1037,17 +1012,7 @@ function hx(n: number): string {
   return n.toString(16).padStart(2, "0");
 }
 
-function buildHtml(
-  selector: string,
-  layerClass: string,
-  layerCount: number,
-  single: boolean,
-): string {
-  const baseClass = selector.startsWith(".") ? selector.slice(1) : selector;
-  if (single) return `<div class="${baseClass} palette"></div>`;
-  const layers = Array.from(
-    { length: layerCount },
-    () => `  <div class="${layerClass}"></div>`,
-  ).join("\n");
-  return `<div class="${baseClass} palette">\n${layers}\n</div>`;
+/** A complete example page for this result, linking a default stylesheet name. */
+function exampleHtml(meta: Meta): string {
+  return buildExampleHtml(meta, `${meta.selector.replace(/^\./, "")}.css`);
 }

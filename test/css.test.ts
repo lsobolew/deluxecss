@@ -89,6 +89,14 @@ describe("convert (full pipeline)", () => {
     expect(css).toContain(":nth-child(2)");
   });
 
+  it("emitHtml produces a complete example page linking a stylesheet", () => {
+    const { html } = convert(checker, { emitHtml: true });
+    expect(html).toContain("<!doctype html>");
+    expect(html).toMatch(/<link rel="stylesheet" href="[^"]+\.css"/);
+    expect(html).toContain('<div class="pixel-image palette">');
+    expect(html).toContain('<div class="pixel-image__layer"></div>');
+  });
+
   it("minifies when requested", () => {
     const { css } = convert(checker, { minify: true });
     expect(css).not.toContain("\n");

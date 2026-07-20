@@ -55,6 +55,9 @@ pixel-css sprite.png -o sprite.css --meta sprite.json
 
 # quantize a photo down to 12 controllable colors
 pixel-css photo.jpg -o photo.css --max-colors 12 --scale 2
+
+# also emit a complete, ready-to-open example page that links the CSS
+pixel-css sprite.png -o sprite.css --html sprite.html
 ```
 
 ```
@@ -62,7 +65,7 @@ pixel-css <input> [options]
 
   -o, --out <file>            Write CSS here (default: stdout)
       --meta <file>           Also write metadata JSON here
-      --html <file>           Also write a demo HTML fragment here
+      --html <file>           Also write a complete example HTML page (links --out)
       --animate               Treat input as animated (GIF/WebP): CSS keyframes, no JS
       --anim-mode <mode>      palette | frames (default: palette)
       --max-frames <n>        Sample down to at most n frames (evenly spaced)

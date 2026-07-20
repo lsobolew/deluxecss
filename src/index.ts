@@ -1,4 +1,5 @@
 import { buildCss } from "./css.js";
+import { buildExampleHtml } from "./html.js";
 import { decode } from "./decode.js";
 import { packLayers } from "./layers.js";
 import { buildMeta } from "./meta.js";
@@ -18,6 +19,7 @@ export type {
 export { decode, decodeFrames, decodeFilesToFrames } from "./decode.js";
 export { resolveOptions } from "./options.js";
 export { convertAnimated, animateImageToCss } from "./animate.js";
+export { buildExampleHtml } from "./html.js";
 
 /**
  * Convert an already-decoded RGBA image to CSS. Synchronous and dependency-free
@@ -54,7 +56,7 @@ export function convert(
 
   const result: ConvertResult = { css, meta };
   if (opts.emitHtml) {
-    result.html = buildHtml(meta, opts.selector, layerClass);
+    result.html = buildExampleHtml(meta, defaultCssHref(meta));
   }
   return result;
 }
@@ -71,11 +73,7 @@ export async function imageToCss(
   return convert(image, options);
 }
 
-function buildHtml(meta: Meta, selector: string, layerClass: string): string {
-  const baseClass = selector.startsWith(".") ? selector.slice(1) : selector;
-  const layers = Array.from(
-    { length: meta.layerCount },
-    () => `  <div class="${layerClass}"></div>`,
-  ).join("\n");
-  return `<div class="${baseClass} palette">\n${layers}\n</div>`;
+/** A sensible default stylesheet href when the caller doesn't specify one. */
+function defaultCssHref(meta: Meta): string {
+  return `${meta.selector.replace(/^\./, "")}.css`;
 }

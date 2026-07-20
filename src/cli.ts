@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+import { basename } from "node:path";
 import { writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import {
   animateImageToCss,
+  buildExampleHtml,
   convertAnimated,
   decodeFilesToFrames,
   imageToCss,
@@ -17,7 +19,7 @@ Usage:
 Options:
   -o, --out <file>            Write CSS here (default: stdout)
       --meta <file>           Also write metadata JSON here
-      --html <file>           Also write a demo HTML fragment here
+      --html <file>           Also write a complete example HTML page (links --out)
       --animate               Treat input as animated (GIF/WebP): emit CSS
                               keyframes that play it (no JS, no custom element)
       --anim-mode <mode>      palette | frames | overlay (default: palette)
@@ -188,8 +190,12 @@ async function main(): Promise<void> {
     await writeFile(values.meta, JSON.stringify(meta, null, 2), "utf8");
     process.stderr.write(`Wrote ${values.meta}\n`);
   }
-  if (values.html && html) {
-    await writeFile(values.html, html, "utf8");
+  if (values.html) {
+    // A complete, openable page that links the actual --out CSS file by name
+    // (falls back to a sensible default when writing CSS to stdout).
+    const cssHref = values.out ? basename(values.out) : undefined;
+    const page = cssHref ? buildExampleHtml(meta, cssHref) : html;
+    await writeFile(values.html, page ?? "", "utf8");
     process.stderr.write(`Wrote ${values.html}\n`);
   }
 }

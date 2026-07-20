@@ -17,6 +17,7 @@ export function buildMeta(
     cssVarPrefix: opts.cssVarPrefix,
     selector: opts.selector,
     layerClass,
+    singleElement: opts.singleElement,
     hasAlpha: image.hasAlpha,
   };
 }
