@@ -12,7 +12,7 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { backLink, cmdBlock } from "../../../scripts/example-utils.mjs";
 
-const SRC = fileURLToPath(new URL("../../../../mario2.png", import.meta.url));
+const SRC = fileURLToPath(new URL("../../assets/mario.png", import.meta.url));
 const OUT = fileURLToPath(new URL("./index.html", import.meta.url));
 const S = 20; // px per pixel
 

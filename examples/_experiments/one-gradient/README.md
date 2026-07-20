@@ -7,7 +7,7 @@ whole 2D image if it "wraps" into rows?
 **Answer: yes** — with `box-decoration-break: slice`.
 
 ```
-node gen.mjs        # regenerates index.html from ../../../../mario2.png
+node gen.mjs        # regenerates index.html from ../../assets/mario.png
 ```
 
 Open `index.html`: (A) is the per-row reference, (B) is the same 12×16 Mario drawn

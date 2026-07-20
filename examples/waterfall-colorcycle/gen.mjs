@@ -18,9 +18,8 @@ const css = `${dir}/waterfall.css`, meta = `${dir}/waterfall.json`;
 execFileSync("node", [CLI, gif,
   // Split the palette: a rich static base (256 — the background is rasterized
   // once) and a small animated palette (24 — the cycling water). The animation
-  // lives on the overlay element, so only it recalculates styles each tick, not
-  // the many-layer base. Result: a crisp background AND smooth cycling (~40 fps),
-  // where a single 48-colour palette on the container ran at ~10 fps.
+  // lives on the overlay element, so per-tick style recalc is scoped to it, not
+  // the many-layer base — a crisp background with smooth cycling.
   "--animate", "--anim-mode", "overlay-palette", "--inline-static-colors",
   "--max-colors-static", "256", "--max-colors-animated", "24",
   "-o", css, "--meta", meta], { stdio: "inherit" });
@@ -48,8 +47,8 @@ writeFileSync(`${dir}/index.html`, `<!doctype html>
   quantized richly (256 colors, rasterized once), an overlay covering <em>only</em>
   the flowing water with a small 24-color animated palette, and the animation on
   the overlay element so per-tick style recalc is scoped to it — the rich base is
-  a sibling and never recalculates. Crisp background + smooth cycling (~40 fps vs
-  ~10 with one 48-color palette on the container). Original GIF on the right.</p>
+  a sibling and never recalculates. Crisp background with smooth cycling. The
+  original GIF is on the right.</p>
   <div class="row">
     <figure>
       <div class="pixel-image palette" role="img" aria-label="waterfall, CSS color cycling">${layers}<div class="pixel-image__overlay"></div></div>

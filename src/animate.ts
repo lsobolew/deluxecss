@@ -207,7 +207,7 @@ function convertFrameSwap(
   const chunkRows = opts.singleElement ? Infinity : opts.layerChunkSize;
   // inlinePalette: frames never touch the palette (each frame swaps the whole
   // background-image), so writing literal colors and dropping the --color-* vars
-  // is safe here — it's the palette-free `10m` shape, smaller and var-free.
+  // is safe here — a palette-free, smaller, var-free stylesheet.
   const frameColorRef = opts.inlinePalette
     ? (i: number) => colors[i]!
     : undefined;
@@ -236,7 +236,7 @@ function convertFrameSwap(
 
   // 4. Palette + container + layer scaffolding only — the background itself is
   //    delivered by the @keyframes below (background-image AND -position together,
-  //    the `10m` technique), so no static frame-0 background is painted.
+  //    so every stacked layer binds), so no static frame-0 background is painted.
   const baseImage: IndexedImage = {
     width,
     height,

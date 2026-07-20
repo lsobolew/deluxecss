@@ -4,7 +4,10 @@ A few seconds of the Matrix clip as pure CSS, frame by frame, at high colour
 fidelity (up to 256 colours — not the tight palette the other examples use). This
 is the "how far does frames mode go?" demo: it works, but you feel every cost.
 
-Generated (recipe committed, the ~193 MB of CSS is not — run `gen.mjs`):
+Generated (recipe committed, the ~193 MB of CSS is not — run `gen.mjs`). Drop
+your own frame PNGs (`matrix_000.png … matrix_215.png`) into
+`examples/assets/matrix/` first — they aren't shipped (heavy, and it's a
+stress test):
 
 ```
 node examples/matrix-frames/gen.mjs
@@ -25,8 +28,8 @@ files. **≈193 MB raw → ≈12 MB gzipped.**
     gradients var-free (literal colours + `calc(100% / W * n)` stops), and
     multi-layer splits both the stops and the paint across elements, so each
     layer's `@keyframes` stays small and renders.
-- **Not the value length or `container-type`** — only var() count per value and
-  total parse size.
+- What bounds it is the `var()` count per value and the total parse size — not
+  the element size or the length of any single value.
 
 ## Takeaway
 
