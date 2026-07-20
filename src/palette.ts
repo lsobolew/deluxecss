@@ -78,7 +78,7 @@ function quantizedImage(
   opts: ResolvedOptions,
 ): IndexedImage {
   const { width, height, data } = image;
-  const { alphaThreshold, colorFormat, dither } = opts;
+  const { alphaThreshold, colorFormat } = opts;
   const pixelCount = width * height;
 
   const { palette, indices: rgbIndices } = quantize(
@@ -86,7 +86,6 @@ function quantizedImage(
     width,
     height,
     opts.maxColors!,
-    dither,
   );
 
   const colors = palette.map(([r, g, b]) =>

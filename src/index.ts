@@ -1,4 +1,4 @@
-import { buildCss, heldBackgroundCss } from "./css.js";
+import { buildCss } from "./css.js";
 import { decode } from "./decode.js";
 import { packLayers } from "./layers.js";
 import { buildMeta } from "./meta.js";
@@ -44,20 +44,13 @@ export function convert(
   const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
   const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
-  const { css: baseCss, layerClass, baseBackgrounds } = buildCss(
+  const { css, layerClass } = buildCss(
     indexed,
     layers,
     opts,
     opts.inlinePalette ? new Set<number>() : undefined,
   );
   const meta = buildMeta(indexed, layers, opts, layerClass);
-
-  let css = baseCss;
-  if (baseBackgrounds) {
-    // Folder-9 technique: deliver the (static) background through a held
-    // @keyframes so the element is promoted to its own compositing layer.
-    css += heldBackgroundCss(baseBackgrounds, opts, layerClass, "1s");
-  }
 
   const result: ConvertResult = { css, meta };
   if (opts.emitHtml) {

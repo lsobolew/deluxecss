@@ -89,29 +89,9 @@ describe("convert (full pipeline)", () => {
     expect(css).toContain(":nth-child(2)");
   });
 
-  it("throws for pseudo mode with more than 2 layers", () => {
-    const tall: DecodedImage = {
-      width: 1,
-      height: 6,
-      data: Uint8Array.from(new Array(6).fill([0, 0, 0, 255]).flat()),
-    };
-    expect(() =>
-      convert(tall, { layerElement: "pseudo", layerChunkSize: 2 }),
-    ).toThrow(/pseudo/);
-  });
-
   it("minifies when requested", () => {
     const { css } = convert(checker, { minify: true });
     expect(css).not.toContain("\n");
     expect(css).toContain("--color-0:#ff0000");
-  });
-
-  it("backgroundInKeyframes delivers a static image via a held keyframe", () => {
-    const { css } = convert(checker, { backgroundInKeyframes: true });
-    const head = css.split("@keyframes")[0]!;
-    expect(head).not.toContain("background-image:"); // not static on element
-    expect(css).toContain("@keyframes pxc-bg");
-    expect(css).toContain("animation: pxc-bg");
-    expect(css).toContain("will-change: background-image;");
   });
 });

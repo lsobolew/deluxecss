@@ -64,22 +64,18 @@ pixel-css <input> [options]
       --anim-mode <mode>      palette | frames (default: palette)
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --no-will-change        Omit the will-change hint (frames mode)
-      --bg-in-keyframes       Deliver background-image via a held @keyframes rule
-                              (compositing-layer promotion; implies single-element)
       --duration <s>          Animation loop duration in seconds (default: from GIF)
       --resize <w>            Downscale to width w before converting (nearest)
       --single-element        Paint on one element (no layer divs); 1 layer only
       --max-colors <n>        Quantize to at most n colors (default: all; anim: 64)
       --max-colors-static <n> overlay-palette: colors for the static base (rich)
       --max-colors-animated <n> overlay-palette: colors for the cycling overlay (few)
-      --dither <mode>         floyd-steinberg | atkinson (default: off)
       --alpha-threshold <n>   Alpha (0-255) below which a pixel is transparent (128)
       --alpha-mode <mode>     binary | keep (default: binary)
       --scale <n>             Zoom multiplier written to --scale (default: 1)
       --sizing <mode>         container | percent | pixel (default: container)
       --chunk <n>             Rows per background layer (default: 50)
       --max-stops <n>         Max color stops per layer before splitting (4000)
-      --layer-element <mode>  div | pseudo (default: div)
       --prefix <name>         Palette custom-property prefix (default: color)
       --selector <sel>        Container class selector (default: .pixel-image)
       --palette-selector <s>  Selector carrying the palette (":host, .palette")
@@ -177,23 +173,6 @@ stacked `<div>` layers (each with its own synchronized `@keyframes`), so no
 single element carries the whole background — that's what lets a full-resolution
 frame animation paint where a single-element one would go blank.
 
-#### Delivering the background from a keyframe (`backgroundInKeyframes`)
-
-You can also hand the `background-image` to the browser through a **held
-`@keyframes`** rule (`0%,100%`) instead of setting it statically on the element:
-
-```sh
-pixel-css scene.gif --animate --bg-in-keyframes -o scene.css
-```
-
-Because the background is now animation-driven, the browser gives the element its
-own compositing layer (reinforced by `will-change`), even for a still image. It
-composes with palette animation — the background layout is *held* while the
-`--color-*` values cycle — so you get the layer-promotion benefit and a live
-palette at once. For large images each stacked layer gets its own held keyframe,
-so it works at full resolution. (`examples/waterfall-colorcycle` renders at the
-source GIF's original 640×286 resolution.)
-
 #### Building an animation from separate frame files
 
 Pass several images as a frame sequence (they must share dimensions):
@@ -215,7 +194,6 @@ low-color animation are where this shines.
 | Option | Default | Notes |
 |---|---|---|
 | `maxColors` | *(none)* | Quantize (Wu) to at most N colors. Omit for the exact palette. |
-| `dither` | `false` | `floyd-steinberg` \| `atkinson`. Grows CSS a lot — off by default. |
 | `alphaThreshold` | `128` | Alpha below this → transparent. |
 | `alphaMode` | `"binary"` | `binary` (opaque or transparent) or `keep` (per-pixel `rgba`). |
 | `resize` | *(none)* | Downscale to this width before converting (nearest-neighbor). |
@@ -224,12 +202,10 @@ low-color animation are where this shines.
 | `animationMode` | `"palette"` | `palette` (cycle `--color-*`), `frames` (swap whole `background-image`), or `overlay` (static base + mostly-transparent animated overlay). |
 | `maxFrames` | *(all)* | Sample the animation down to at most N frames (evenly). |
 | `willChange` | `true` | Emit `will-change` layer-promotion hint (frames mode). |
-| `backgroundInKeyframes` | `false` | Deliver `background-image` via a held `@keyframes` for compositing-layer promotion (single element, or per `<div>` layer). |
 | `inlineStaticColors` | `false` | Palette animation: inline colors that never change as literals, keeping only animating colors as `--color-*` variables. |
 | `scale` | `1` | Written into `--scale`; override per-element in CSS. |
 | `sizing` | `"container"` | `container` (crisp, fluid; needs a sized host), `percent` (widest support), `pixel` (integer px, seam-free, not fluid). |
 | `layerChunkSize` | `50` | Rows packed per background layer element. |
-| `layerElement` | `"div"` | `div` (any layer count) or `pseudo` (≤ 2 layers). |
 | `maxStopsPerLayer` | `4000` | Secondary split guard on color-stop count. |
 | `cssVarPrefix` | `"color"` | `--color-0`, … |
 | `selector` | `".pixel-image"` | Container class. |

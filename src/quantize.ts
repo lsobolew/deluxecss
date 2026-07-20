@@ -1,5 +1,4 @@
-import { applyPaletteSync, buildPaletteSync, utils } from "image-q";
-import type { Options } from "./types.js";
+import { buildPaletteSync, utils } from "image-q";
 
 export type RGB = readonly [number, number, number];
 
@@ -23,7 +22,6 @@ export function quantize(
   width: number,
   height: number,
   maxColors: number,
-  dither: Options["dither"],
 ): QuantizeResult {
   // Work on an RGB-only copy (alpha forced to 255) so quantization ignores alpha.
   const rgbOpaque = new Uint8Array(data.length);
@@ -51,35 +49,19 @@ export function quantize(
 
   const indices = new Int32Array(width * height);
 
-  if (dither) {
-    // Spatial error diffusion needs the full-size container.
-    const out = applyPaletteSync(container, iqPalette, {
-      colorDistanceFormula: "euclidean",
-      imageQuantization: dither,
-    });
-    const outPoints = out.getPointArray();
-    // Output colors are exactly palette colors → exact lookup.
-    const keyToIndex = new Map<number, number>();
-    palette.forEach(([r, g, b], i) => keyToIndex.set(rgbKey(r, g, b), i));
-    for (let p = 0; p < indices.length; p++) {
-      const pt = outPoints[p]!;
-      indices[p] = keyToIndex.get(rgbKey(pt.r, pt.g, pt.b)) ?? 0;
+  // Nearest-color mapping (squared Euclidean), with a per-color cache.
+  const cache = new Map<number, number>();
+  for (let p = 0, i = 0; p < indices.length; p++, i += 4) {
+    const r = data[i]!;
+    const g = data[i + 1]!;
+    const b = data[i + 2]!;
+    const key = rgbKey(r, g, b);
+    let idx = cache.get(key);
+    if (idx === undefined) {
+      idx = nearest(palette, r, g, b);
+      cache.set(key, idx);
     }
-  } else {
-    // Nearest-color mapping (squared Euclidean), with a per-color cache.
-    const cache = new Map<number, number>();
-    for (let p = 0, i = 0; p < indices.length; p++, i += 4) {
-      const r = data[i]!;
-      const g = data[i + 1]!;
-      const b = data[i + 2]!;
-      const key = rgbKey(r, g, b);
-      let idx = cache.get(key);
-      if (idx === undefined) {
-        idx = nearest(palette, r, g, b);
-        cache.set(key, idx);
-      }
-      indices[p] = idx;
-    }
+    indices[p] = idx;
   }
 
   return { palette, indices };

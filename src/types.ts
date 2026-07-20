@@ -19,13 +19,6 @@ export interface Options {
   maxColorsStatic?: number;
   maxColorsAnimated?: number;
 
-  /**
-   * Error-diffusion dithering applied during quantization. Off by default:
-   * dithering scatters isolated pixels, which destroys flat runs and can grow
-   * the CSS several-fold. Only meaningful when `maxColors` is set.
-   */
-  dither?: false | "floyd-steinberg" | "atkinson";
-
   /** Alpha value (0-255) below which a pixel is treated as transparent. Default 128. */
   alphaThreshold?: number;
 
@@ -50,13 +43,6 @@ export interface Options {
 
   /** Rows of the image packed into a single background layer element. Default 50. */
   layerChunkSize?: number;
-
-  /**
-   * Element used to stack background layers.
-   * - `div` (default): real child `<div>`s in a grid overlay — scales to any layer count.
-   * - `pseudo`: `::before`/`::after` — childless, but limited to 2 layers.
-   */
-  layerElement?: "div" | "pseudo";
 
   /** Secondary guard: split a layer further if its color-stop count would exceed this. Default 4000. */
   maxStopsPerLayer?: number;
@@ -136,18 +122,6 @@ export interface Options {
   maxFrames?: number;
 
   /**
-   * Palette / overlay-palette only: how the color-cycling keyframes are laid out.
-   * - `per-color` (default): one `@keyframes` per animated slot (each cycles just
-   *   its own `--color-*`, with dedup), and the element runs all of them at once.
-   * - `combined`: a single `@keyframes` whose every stop defines *all* the
-   *   changing colors for that frame, driven by one animation.
-   * - a **number** N: group the animated slots into `@keyframes` of N colors each
-   *   (so `⌈slots/N⌉` animations, each stop setting its group's N colors). Lets
-   *   you dial the count/size tradeoff — e.g. 522×1 vs 44×12 vs 1×522.
-   */
-  paletteKeyframes?: "per-color" | "combined" | number;
-
-  /**
    * `overlay` mode only: a pixel counts as "changing" only if its color varies
    * by more than this (0-255, per channel) across the loop. Filters out
    * quantization flicker so the animated region — and the overlay's bounding box
@@ -160,16 +134,6 @@ export interface Options {
    * to promote the element to its own compositing layer. Default true.
    */
   willChange?: boolean;
-
-  /**
-   * Deliver the `background-image` from inside a held `@keyframes` rule
-   * (`0%,100%`) driven by an animation, instead of as a static property. This
-   * promotes the element to its own compositing layer even for a still image,
-   * and composes with palette animation (the background layout is held while
-   * `--color-*` cycle). Works for a single element and, per layer, for a stack
-   * of `<div>` layers (so it scales to full-resolution images). Default false.
-   */
-  backgroundInKeyframes?: boolean;
 
   /**
    * Palette animation only: inline colors that never change during the loop as

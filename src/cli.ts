@@ -33,12 +33,7 @@ Options:
       --max-frames <n>        Sample down to at most n frames (evenly spaced)
       --change-threshold <n>  overlay: min per-channel color delta (0-255) for a
                               pixel to count as animated (default 16; filters noise)
-      --palette-keyframes <m> per-color | combined | <n> (default per-color):
-                              one @keyframes per color, one for all, or grouped
-                              into @keyframes of n colors each
       --no-will-change        Omit the will-change hint (frames mode)
-      --bg-in-keyframes       Deliver background-image via a held @keyframes rule
-                              (compositing-layer promotion; single or per-layer)
       --inline-static-colors  Inline non-animating colors as literals; keep only
                               animating colors as --color-* variables (palette anim)
       --inline-palette        Inline ALL colors as literals; emit no --color-*
@@ -49,14 +44,12 @@ Options:
       --max-colors <n>        Quantize to at most n colors (default: all; anim: 64)
       --max-colors-static <n> overlay-palette: colors for the static base (rich)
       --max-colors-animated <n> overlay-palette: colors for the animated overlay (few)
-      --dither <mode>         floyd-steinberg | atkinson (default: off)
       --alpha-threshold <n>   Alpha (0-255) below which a pixel is transparent (default: 128)
       --alpha-mode <mode>     binary | keep (default: binary)
       --scale <n>             Zoom multiplier written to --scale (default: 1)
       --sizing <mode>         container | percent | pixel (default: container)
       --chunk <n>             Rows per background layer (default: 50)
       --max-stops <n>         Max color stops per layer before splitting (default: 4000)
-      --layer-element <mode>  div | pseudo (default: div)
       --prefix <name>         Palette custom-property prefix (default: color)
       --selector <sel>        Container class selector (default: .pixel-image)
       --palette-selector <s>  Selector carrying the palette (default: ":host, .palette")
@@ -77,9 +70,7 @@ async function main(): Promise<void> {
       "anim-mode": { type: "string" },
       "max-frames": { type: "string" },
       "change-threshold": { type: "string" },
-      "palette-keyframes": { type: "string" },
       "no-will-change": { type: "boolean" },
-      "bg-in-keyframes": { type: "boolean" },
       "inline-static-colors": { type: "boolean" },
       "inline-palette": { type: "boolean" },
       duration: { type: "string" },
@@ -88,14 +79,12 @@ async function main(): Promise<void> {
       "max-colors": { type: "string" },
       "max-colors-static": { type: "string" },
       "max-colors-animated": { type: "string" },
-      dither: { type: "string" },
       "alpha-threshold": { type: "string" },
       "alpha-mode": { type: "string" },
       scale: { type: "string" },
       sizing: { type: "string" },
       chunk: { type: "string" },
       "max-stops": { type: "string" },
-      "layer-element": { type: "string" },
       prefix: { type: "string" },
       selector: { type: "string" },
       "palette-selector": { type: "string" },
@@ -116,7 +105,6 @@ async function main(): Promise<void> {
     maxColors: num(values["max-colors"]),
     maxColorsStatic: num(values["max-colors-static"]),
     maxColorsAnimated: num(values["max-colors-animated"]),
-    dither: (values.dither as Options["dither"]) ?? false,
     alphaThreshold: num(values["alpha-threshold"]),
     alphaMode: values["alpha-mode"] as Options["alphaMode"],
     scale: num(values.scale),
@@ -126,15 +114,12 @@ async function main(): Promise<void> {
     animationMode: values["anim-mode"] as Options["animationMode"],
     maxFrames: num(values["max-frames"]),
     changeThreshold: num(values["change-threshold"]),
-    paletteKeyframes: parsePaletteKeyframes(values["palette-keyframes"]),
     willChange: values["no-will-change"] ? false : undefined,
-    backgroundInKeyframes: values["bg-in-keyframes"],
     inlineStaticColors: values["inline-static-colors"],
     inlinePalette: values["inline-palette"],
     sizing: values.sizing as Options["sizing"],
     layerChunkSize: num(values.chunk),
     maxStopsPerLayer: num(values["max-stops"]),
-    layerElement: values["layer-element"] as Options["layerElement"],
     cssVarPrefix: values.prefix,
     selector: values.selector,
     paletteSelector: values["palette-selector"],
@@ -213,18 +198,6 @@ function num(v: string | undefined): number | undefined {
   if (v === undefined) return undefined;
   const n = Number(v);
   if (Number.isNaN(n)) throw new Error(`Expected a number, got "${v}"`);
-  return n;
-}
-
-function parsePaletteKeyframes(
-  v: string | undefined,
-): Options["paletteKeyframes"] {
-  if (v === undefined) return undefined;
-  if (v === "per-color" || v === "combined") return v;
-  const n = Number(v);
-  if (Number.isNaN(n)) {
-    throw new Error(`--palette-keyframes: expected per-color|combined|<number>, got "${v}"`);
-  }
   return n;
 }
 

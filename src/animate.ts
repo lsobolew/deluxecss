@@ -1,5 +1,5 @@
 import { buildPaletteSync, utils } from "image-q";
-import { buildCss, heldBackgroundCss } from "./css.js";
+import { buildCss } from "./css.js";
 import { decodeFrames } from "./decode.js";
 import { packLayers } from "./layers.js";
 import { buildMeta } from "./meta.js";
@@ -106,7 +106,7 @@ export function convertAnimated(
   const chunk = opts.singleElement ? Infinity : opts.layerChunkSize;
   const stopBudget = opts.singleElement ? Infinity : opts.maxStopsPerLayer;
   const layers = packLayers(rows, chunk, stopBudget);
-  const { css: baseCss, layerClass, baseBackgrounds } = buildCss(
+  const { css: baseCss, layerClass } = buildCss(
     indexed,
     layers,
     opts,
@@ -114,8 +114,7 @@ export function convertAnimated(
   );
   const meta = buildMeta(indexed, layers, opts, layerClass);
 
-  // 5. Animation: one keyframes rule per palette slot that changes, plus (with
-  //    backgroundInKeyframes) the held background keyframes.
+  // 5. Animation: one keyframes rule per palette slot that changes over the loop.
   const totalDelay = delays.reduce((a, b) => a + b, 0) || frames.length * 100;
   const duration = options.duration ?? totalDelay / 1000;
   const dur = `var(--pixel-anim-duration, ${duration}s)`;
@@ -133,35 +132,16 @@ export function convertAnimated(
   });
   const paletteSlotCount = animationNames.length;
 
-  // Folder-9 technique: hold the background-image in its own animation so the
-  // element is composited on its own layer while the palette cycles. For a
-  // single element it must share the one `animation` list with the palette
-  // tracks; for layered output each layer animates its own held background.
-  let selectorWillChange = "";
-  let layerBgCss = "";
-  if (baseBackgrounds && opts.singleElement) {
-    animationNames.unshift("pxc-bg");
-    keyframeBlocks.unshift(
-      `@keyframes pxc-bg {\n  0%, 100% {\n    background-image: ${baseBackgrounds[0]!.image};\n    background-position: ${baseBackgrounds[0]!.position};\n  }\n}`,
-    );
-    selectorWillChange = opts.willChange
-      ? `\n  will-change: background-image;`
-      : "";
-  } else if (baseBackgrounds) {
-    layerBgCss = heldBackgroundCss(baseBackgrounds, opts, layerClass, dur);
-  }
-
   let css = baseCss;
   if (animationNames.length > 0) {
     const list = animationNames
       .map((n) => `${n} ${dur} step-end infinite`)
       .join(", ");
     css +=
-      `\n${opts.selector} {\n  animation: ${list};${selectorWillChange}\n}\n\n` +
+      `\n${opts.selector} {\n  animation: ${list};\n}\n\n` +
       keyframeBlocks.join("\n\n") +
       "\n";
   }
-  css += layerBgCss;
 
   meta.animation = {
     mode: "palette",
@@ -788,14 +768,13 @@ function convertOverlayPalette(
     }
   }
 
+  // One @keyframes per animated slot, with per-slot dedup: N small animations,
+  // each cycling a single --color-*. (This beat every "fewer, bigger keyframes"
+  // grouping in testing — a single combined keyframes is O(frames × colors) to
+  // build and slow to first paint — so it's the only layout.)
   let animRule = "";
   const kfBlocks: string[] = [];
-  const pk = opts.paletteKeyframes;
-  if (animated.length === 0) {
-    // no animation
-  } else if (pk === "per-color") {
-    // One @keyframes per animated slot, with per-slot dedup (the efficient
-    // default): N animations, each cycling a single --color-*.
+  if (animated.length > 0) {
     const names: string[] = [];
     for (const t of animated) {
       const name = `pxc-${t.idx}`;
@@ -817,34 +796,6 @@ function convertOverlayPalette(
         kfStops.push(`  100% { --${opts.cssVarPrefix}-${t.idx}: ${prev}; }`);
       }
       kfBlocks.push(`@keyframes ${name} {\n${kfStops.join("\n")}\n}`);
-    }
-    animRule = `\n${opts.selector} > .${overlayClass} { animation: ${names
-      .map((n) => `${n} ${dur} step-end infinite`)
-      .join(", ")}; }\n`;
-  } else {
-    // Group the animated slots into chunks; each group is one @keyframes whose
-    // every stop sets all the group's colors for that frame (no dedup). Group
-    // size = `combined` → all in one; a number → that many vars per animation.
-    // This lets you dial the count/size tradeoff (e.g. 522×1 vs 44×12 vs 1×522).
-    const groupSize =
-      pk === "combined"
-        ? animated.length
-        : Math.max(1, Math.min(animated.length, Math.floor(Number(pk))));
-    const names: string[] = [];
-    for (let g = 0; g < animated.length; g += groupSize) {
-      const group = animated.slice(g, g + groupSize);
-      const name = `pxc-g${g / groupSize}`;
-      names.push(name);
-      const groupStop = (f: number) =>
-        group
-          .map((t) => `--${opts.cssVarPrefix}-${t.idx}: ${tokenToColor(t.seq[f]!)};`)
-          .join(" ");
-      const stops = framePct.map((pct, f) => `  ${pct}% { ${groupStop(f)} }`);
-      // Explicit terminal keyframe holding the last frame (see per-color branch).
-      if (framePct[framePct.length - 1] !== 100) {
-        stops.push(`  100% { ${groupStop(frames.length - 1)} }`);
-      }
-      kfBlocks.push(`@keyframes ${name} {\n${stops.join("\n")}\n}`);
     }
     animRule = `\n${opts.selector} > .${overlayClass} { animation: ${names
       .map((n) => `${n} ${dur} step-end infinite`)
