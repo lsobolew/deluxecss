@@ -59,7 +59,7 @@ ${links.join("\n")}
   <p class="sz">CSS: ${sizeText(paths)} · across ${files.length} files</p>
   <div class="pixel-image palette" role="img" aria-label="Matrix film clip, frame-by-frame CSS">${layers}</div>
   ${cmdBlock(
-    `deluxecss frames/*.png --animate --anim-mode frames \\\n` +
+    `deluxecss examples/assets/matrix/matrix_*.png --animate --anim-mode frames \\\n` +
     `  --duration 9 --resize 256 --max-colors 256 --inline-palette --chunk 20 -o matrix.css\n` +
     `# then split matrix.css into ${files.length} part-*.css files (see gen.mjs)`,
   )}

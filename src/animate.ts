@@ -234,9 +234,9 @@ function convertFrameSwap(
 
   const layerCount = perFrameLayers[0]!.length;
 
-  // 4. Palette + container + layer scaffolding only — the background itself is
-  //    delivered by the @keyframes below (background-image AND -position together,
-  //    so every stacked layer binds), so no static frame-0 background is painted.
+  // 4. Palette + container + layer scaffolding only. No static frame-0 background
+  //    is painted here: the @keyframes below deliver it, animating background-image
+  //    and background-position together so every stacked layer binds.
   const baseImage: IndexedImage = {
     width,
     height,
