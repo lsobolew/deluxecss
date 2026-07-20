@@ -6,7 +6,9 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { sizeText, backLink, CLI } from "../../scripts/example-utils.mjs";
+import { sizeText, backLink, cmdBlock, CLI } from "../../scripts/example-utils.mjs";
+
+const CMD = "pixel-css ljl_ArtificialHeart.iff --animate --anim-mode overlay-palette \\\n  --inline-static-colors -o heart.css";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const iff = fileURLToPath(new URL("../assets/ljl_ArtificialHeart.iff", import.meta.url));
@@ -37,6 +39,7 @@ writeFileSync(`${dir}/index.html`, `<!doctype html>
   as an overlay-palette animation, with the static art inlined. No GIF, no sampling.</p>
   <div class="pixel-image palette" role="img" aria-label="Artificial vs natural heart, Amiga color-cycling art">${layers}<div class="pixel-image__overlay"></div></div>
   <p class="sz">CSS: ${sizeText(css)}</p>
+  ${cmdBlock(CMD)}
   <p style="font-size:12px;color:#7f8ea3">Original Amiga artwork by
     <a href="https://amiga.lychesis.net/artists/JackHaeger.html" style="color:#6db3ff">Jack Haeger</a>.</p>
   ${backLink()}

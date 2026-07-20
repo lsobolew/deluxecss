@@ -8,7 +8,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { sizeText, backLink, CLI } from "../../scripts/example-utils.mjs";
+import { sizeText, backLink, cmdBlock, CLI } from "../../scripts/example-utils.mjs";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const src = fileURLToPath(new URL("../assets/big_whoop.png", import.meta.url));
@@ -26,13 +26,17 @@ const variants = [
 ];
 
 const info = {};
+const cmdFor = {};
 for (const [name, sel, extra] of variants) {
   const css = `${dir}/${name}.css`, meta = `${dir}/${name}.json`;
   execFileSync("node", [CLI, src, ...extra, "--selector", sel, "-o", css, "--meta", meta], { stdio: "inherit" });
   const m = JSON.parse(readFileSync(meta, "utf8"));
   info[name] = { sel: sel.slice(1), layers: m.layerCount, colors: m.colors.length, size: sizeText(css) };
+  // The user-facing command (no demo-only --selector/--meta plumbing).
+  cmdFor[name] = `pixel-css big_whoop.png ${extra.join(" ")} -o big-whoop.css`;
   rmSync(meta);
 }
+cmdFor.vga = cmdFor.multi; // VGA reuses the full-palette multi-layer output
 
 const FRAME_CSS = `.frame,.orig{width:min(632px,90vw);aspect-ratio:632/144;outline:1px solid #232a33}
   .orig{image-rendering:pixelated;display:block;height:auto}`;
@@ -63,6 +67,7 @@ const standalone = (slug, cssFile, sel, layers, title, sub) => {
     ${el(sel, cssFile, layers, title)}
     <figcaption>${sub}</figcaption>
   </figure>
+  ${cmdBlock(cmdFor[slug])}
   ${backLink()}
 </body></html>
 `);

@@ -7,7 +7,9 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { sizeText, fileSize, backLink, CLI } from "../../scripts/example-utils.mjs";
+import { sizeText, fileSize, backLink, cmdBlock, CLI } from "../../scripts/example-utils.mjs";
+
+const CMD = "pixel-css monkey_island_waterfal.gif --animate --anim-mode overlay-palette \\\n  --inline-static-colors --max-colors-static 256 --max-colors-animated 24 -o waterfall.css";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const gif = fileURLToPath(new URL("../assets/monkey_island_waterfal.gif", import.meta.url));
@@ -58,6 +60,7 @@ writeFileSync(`${dir}/index.html`, `<!doctype html>
       <figcaption><b>Original GIF</b><br><span class="sz">file: ${fileSize(gif)}</span></figcaption>
     </figure>
   </div>
+  ${cmdBlock(CMD)}
   ${backLink()}
 </body></html>
 `);

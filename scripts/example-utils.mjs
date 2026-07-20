@@ -13,6 +13,15 @@ export function fileSize(path) {
   return fmt(statSync(path).size);
 }
 
+/** A styled, scrollable code block showing the command an example was made with. */
+export function cmdBlock(command, label = "Generated with") {
+  const esc = command.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  return `<div style="margin-top:14px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#7f8ea3;margin-bottom:5px">${label}</div>
+    <pre style="margin:0;padding:10px 12px;background:#12181f;border:1px solid #232a33;border-radius:8px;overflow-x:auto;font:12px/1.55 ui-monospace,monospace;color:#c9d4e0;white-space:pre">${esc}</pre>
+  </div>`;
+}
+
 /** A fixed "back to the demo hub" link (bottom-right; nothing else lives there). */
 export function backLink(depth = 1) {
   const up = "../".repeat(depth);
