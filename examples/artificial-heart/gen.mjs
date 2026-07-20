@@ -22,13 +22,13 @@ const m = JSON.parse(readFileSync(meta, "utf8"));
 const layers = Array.from({ length: m.layerCount }, () => `<div class="pixel-image__layer"></div>`).join("");
 
 writeFileSync(`${dir}/index.html`, `<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>deluxecss — Artificial Heart (IFF color cycling)</title>
 <link rel="stylesheet" href="heart.css">
 <style>
   body{margin:0;padding:24px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
   h1{font-size:19px} p{max-width:64ch;color:#aab;font-size:13px}
-  .pixel-image{width:min(640px,92vw);image-rendering:pixelated;zoom:2}
+  .pixel-image{width:min(1280px,92vw);image-rendering:pixelated}
   .sz{color:#9fd;font-family:monospace}
 </style></head><body>
   <h1>Artificial Heart — Amiga color cycling, pure CSS</h1>

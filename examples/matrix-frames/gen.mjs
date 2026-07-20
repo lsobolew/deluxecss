@@ -42,13 +42,13 @@ const links = files.map((body, i) => { const p = `${dir}/part-${i}.css`; writeFi
 const layers = Array.from({ length: layerCount }, () => `<div class="pixel-image__layer"></div>`).join("");
 
 writeFileSync(`${dir}/index.html`, `<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>deluxecss — Matrix, ${N} frames (limits of frame animation)</title>
 ${links.join("\n")}
 <style>
   body{margin:0;padding:24px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
   h1{font-size:19px} p{max-width:64ch;color:#aab;font-size:13px}
-  .pixel-image{width:min(512px,92vw);margin-top:14px;zoom:2}
+  .pixel-image{width:min(1024px,92vw);margin-top:14px}
   .sz{color:#9fd;font-family:monospace}
 </style></head><body>
   <h1>Matrix — ${N} frames (${(N / 24).toFixed(1)} s @ 24 fps)</h1>

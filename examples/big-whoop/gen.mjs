@@ -52,7 +52,7 @@ const el = (sel, cssFile, layers, label) => {
 // Each rendition also gets a standalone page (just the image + a back link).
 const standalone = (slug, cssFile, sel, layers, title, sub) => {
   writeFileSync(`${dir}/${slug}.html`, `<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>deluxecss — Big Whoop (${title})</title>
 <link rel="stylesheet" href="${cssFile}">
 <style>
@@ -60,7 +60,7 @@ const standalone = (slug, cssFile, sel, layers, title, sub) => {
   h1{font-size:17px} figcaption{font-size:12px;color:#9aa7b8;margin-top:8px}
   .sz{color:#9fd;font-family:monospace}
   ${FRAME_CSS}
-  .frame{zoom:2}
+  .frame{width:min(1264px,92vw)}
 </style></head><body>
   <h1>Big Whoop — ${title}</h1>
   <figure style="margin:0">
@@ -89,7 +89,7 @@ const tile = (slug, sel, cssFile, layers, title, sub) => `<figure style="margin:
   </figure>`;
 
 writeFileSync(`${dir}/index.html`, `<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>deluxecss — Big Whoop (static image, methods & palettes)</title>
 ${["single", "multi", "cga", "ega"].map((n) => `<link rel="stylesheet" href="${n}.css">`).join("\n")}
 <style>

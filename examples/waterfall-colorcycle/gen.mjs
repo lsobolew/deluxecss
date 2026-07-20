@@ -28,7 +28,7 @@ const m = JSON.parse(readFileSync(meta, "utf8"));
 const layers = Array.from({ length: m.layerCount }, () => `<div class="pixel-image__layer"></div>`).join("");
 
 writeFileSync(`${dir}/index.html`, `<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>deluxecss — waterfall, color cycling (vs original GIF)</title>
 <link rel="stylesheet" href="waterfall.css">
 <style>
@@ -39,8 +39,8 @@ writeFileSync(`${dir}/index.html`, `<!doctype html>
   figure{margin:0}
   figcaption{font-size:12px;color:#9aa7b8;margin-top:8px;line-height:1.5}
   .sz{color:#9fd;font-family:monospace}
-  .pixel-image{width:min(640px,92vw);zoom:2}
-  .orig{width:min(640px,92vw);aspect-ratio:640/286;image-rendering:pixelated;display:block;zoom:2}
+  .pixel-image{width:min(1280px,92vw)}
+  .orig{width:min(1280px,92vw);aspect-ratio:640/286;image-rendering:pixelated;display:block}
 </style></head><body>
   <h1>Waterfall — color cycling, pure CSS</h1>
   <p>Palette animation the efficient way, native 640×286: a layered static base

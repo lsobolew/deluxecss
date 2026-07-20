@@ -36,7 +36,7 @@
   width: 100%;
   height: 100%;
   background-repeat: no-repeat;
-  background-size: 100% var(--pixel-height);
+  background-size: 100% calc(var(--pixel-height) + var(--pixel-bleed, 0.35px));
 }
 
 

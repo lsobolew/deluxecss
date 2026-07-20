@@ -76,7 +76,7 @@ export function buildCss(
     const layer = layers[0]!;
     containerBody +=
       `\n  background-repeat: no-repeat;` +
-      `\n  background-size: 100% var(--pixel-height);`;
+      `\n  background-size: 100% calc(var(--pixel-height) + var(--pixel-bleed, 0.35px));`;
     if (paintBackground) {
       containerBody +=
         `\n  background-image: ${layer.backgroundImage};` +
@@ -89,6 +89,13 @@ export function buildCss(
 
   // Layers (child `<div>`s in a grid overlay). Single-element paints on the
   // container above, so no children are emitted.
+  //
+  // Each row is a background layer sized to one `--pixel-height` band. At a
+  // non-integer scale the browser rounds each band's edges in device pixels
+  // independently, which can leave hairline gaps between rows. The tiny
+  // `--pixel-bleed` overlap (0.35px) closes those seams; where there is no gap
+  // the next band paints over it, so it is invisible. Set `--pixel-bleed: 0px`
+  // to opt out.
   if (!single) {
     blocks.push(
       `${selector} > .${layerClass} {\n` +
@@ -97,7 +104,7 @@ export function buildCss(
         `  width: 100%;\n` +
         `  height: 100%;\n` +
         `  background-repeat: no-repeat;\n` +
-        `  background-size: 100% var(--pixel-height);\n` +
+        `  background-size: 100% calc(var(--pixel-height) + var(--pixel-bleed, 0.35px));\n` +
         `}`,
     );
     if (paintBackground) {

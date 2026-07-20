@@ -513,7 +513,7 @@ function convertOverlay(
     `\n  width: calc(var(--pixel-width) * ${boxW});` +
     `\n  height: calc(var(--pixel-height) * ${boxH});` +
     `\n  background-repeat: no-repeat;` +
-    `\n  background-size: 100% var(--pixel-height);` +
+    `\n  background-size: 100% calc(var(--pixel-height) + var(--pixel-bleed, 0.35px));` +
     `\n  background-position: ${overlayPosition};` +
     // Static frame 0 so the overlay is correct even before/without the animation
     // (reduced-motion, or first paint); the keyframes then swap it per frame.
@@ -808,7 +808,7 @@ function convertOverlayPalette(
     `\n  width: calc(var(--pixel-width) * ${boxW});` +
     `\n  height: calc(var(--pixel-height) * ${boxH});` +
     `\n  background-repeat: no-repeat;` +
-    `\n  background-size: 100% var(--pixel-height);` +
+    `\n  background-size: 100% calc(var(--pixel-height) + var(--pixel-bleed, 0.35px));` +
     `\n  background-position: ${overlayPosition};` +
     `\n  background-image: ${overlayBg};` +
     `\n}\n`;
