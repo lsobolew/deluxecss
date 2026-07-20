@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write # tags, changelog commit, GitHub Release
+  issues: write # semantic-release issue comments
+  pull-requests: write # semantic-release PR comments
+  id-token: write # npm trusted publishing (OIDC) + provenance
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history + tags for version calculation
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # trusted publishing needs Node >= 22.14
+          cache: npm
+      - run: npm install -g npm@latest # trusted publishing needs npm >= 11.5.1
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build # dist/ is gitignored — build before publish
+      - run: npx semantic-release # publishes via OIDC — no NPM_TOKEN needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"

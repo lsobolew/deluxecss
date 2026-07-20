@@ -4,6 +4,18 @@
   "description": "Convert any image into pure CSS pixel-art with a live-controllable color palette (CSS custom properties). CLI + library + zero-dependency Web Component.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lsobolew/deluxecss.git"
+  },
+  "homepage": "https://github.com/lsobolew/deluxecss#readme",
+  "bugs": {
+    "url": "https://github.com/lsobolew/deluxecss/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "keywords": [
     "css",
     "pixel-art",
@@ -53,8 +65,15 @@
     "sharp": "^0.33.5"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.9",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.1",
     "@types/node": "^22.0.0",
     "marked": "^18.0.6",
+    "semantic-release": "^25.0.8",
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
