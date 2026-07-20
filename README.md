@@ -1,4 +1,4 @@
-# pixel-css
+# deluxecss
 
 Convert any image into **pure CSS pixel-art with a live-controllable color palette**.
 
@@ -21,7 +21,7 @@ plus `@keyframes` that cycle the palette — no JavaScript and no custom element
 
 Ships as:
 
-- a **CLI** (`pixel-css image.png -o image.css`),
+- a **CLI** (`deluxecss image.png -o image.css`),
 - a **library** (`imageToCss` / `animateImageToCss`),
 - a zero-dependency **Web Component** (`<pixel-image>`) with a palette control panel.
 
@@ -37,7 +37,7 @@ referenced by index, which is what makes live recoloring free.
 ## Install
 
 ```sh
-npm install pixel-css
+npm install deluxecss
 ```
 
 Requires Node ≥ 18. Uses [`sharp`](https://sharp.pixelplumbing.com/) for decoding
@@ -51,17 +51,17 @@ palette cycle baked into the file is reproduced exactly as a CSS animation. See
 
 ```sh
 # exact palette (best for real pixel art)
-pixel-css sprite.png -o sprite.css --meta sprite.json
+deluxecss sprite.png -o sprite.css --meta sprite.json
 
 # quantize a photo down to 12 controllable colors
-pixel-css photo.jpg -o photo.css --max-colors 12 --scale 2
+deluxecss photo.jpg -o photo.css --max-colors 12 --scale 2
 
 # also emit a complete, ready-to-open example page that links the CSS
-pixel-css sprite.png -o sprite.css --html sprite.html
+deluxecss sprite.png -o sprite.css --html sprite.html
 ```
 
 ```
-pixel-css <input> [options]
+deluxecss <input> [options]
 
   -o, --out <file>            Write CSS here (default: stdout)
       --meta <file>           Also write metadata JSON here
@@ -94,7 +94,7 @@ pixel-css <input> [options]
 ## Library
 
 ```ts
-import { imageToCss } from "pixel-css";
+import { imageToCss } from "deluxecss";
 
 const { css, meta, html } = await imageToCss("sprite.png", {
   maxColors: 16,
@@ -110,7 +110,7 @@ in tests or the browser.
 ### Animation
 
 ```ts
-import { animateImageToCss } from "pixel-css";
+import { animateImageToCss } from "deluxecss";
 
 const { css, meta } = await animateImageToCss("waterfall.gif", {
   resize: 200,        // downscale — CSS grows with pixel count
@@ -164,7 +164,7 @@ That's it — the waterfall loops forever, in pure CSS. See
 
 ```sh
 # frame-swap animation, sampled to 12 frames, scaled up
-pixel-css waterfall.gif --animate --anim-mode frames \
+deluxecss waterfall.gif --animate --anim-mode frames \
   --resize 100 --max-frames 12 --max-colors 40 --sizing pixel --scale 5 \
   -o waterfall.css
 ```
@@ -184,7 +184,7 @@ frame animation paint where a single-element one would go blank.
 Pass several images as a frame sequence (they must share dimensions):
 
 ```sh
-pixel-css frame1.png frame2.png frame3.png frame4.png \
+deluxecss frame1.png frame2.png frame3.png frame4.png \
   --animate --anim-mode frames --duration 0.6 --scale 6 -o sprite.css
 ```
 
@@ -236,7 +236,7 @@ The generated CSS expects a container with one child per layer:
 
 ```html
 <script type="module">
-  import "pixel-css/widget";
+  import "deluxecss/widget";
 </script>
 
 <pixel-image css="sprite.css" meta="sprite.json" scale="8" controls></pixel-image>

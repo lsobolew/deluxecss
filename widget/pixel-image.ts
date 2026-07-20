@@ -1,5 +1,5 @@
 /**
- * <pixel-image> — renders CSS pixel-art produced by `pixel-css` and (optionally)
+ * <pixel-image> — renders CSS pixel-art produced by `deluxecss` and (optionally)
  * a control panel for editing its color palette live. Zero dependencies.
  *
  * Usage:
@@ -71,7 +71,7 @@ export class PixelImage extends HTMLElement {
     }
   }
 
-  /** Inline CSS produced by pixel-css. Setting this bypasses the `css` URL attribute. */
+  /** Inline CSS produced by deluxecss. Setting this bypasses the `css` URL attribute. */
   set cssText(value: string) {
     this._cssText = value;
     if (this.isConnected) this.render();

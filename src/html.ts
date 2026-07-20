@@ -25,7 +25,7 @@ export function buildExampleHtml(meta: Meta, cssHref: string): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>pixel-css — ${escapeHtml(cssHref)}</title>
+    <title>deluxecss — ${escapeHtml(cssHref)}</title>
     <link rel="stylesheet" href="${escapeAttr(cssHref)}" />
     <style>
       body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #111; }

@@ -2,7 +2,7 @@
 // Matrix clip, high colour fidelity (not the usual tight palette), rendered the
 // only way that scales — multi-layer (var-free), then split across files so no
 // single file is unwieldy. This is the "how far can frames mode go" demo.
-// Run from the pixel-css dir: node examples/matrix-frames/gen.mjs
+// Run from the repo root: node examples/matrix-frames/gen.mjs
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -41,7 +41,7 @@ const layers = Array.from({ length: layerCount }, () => `<div class="pixel-image
 
 writeFileSync(`${dir}/index.html`, `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>pixel-css — Matrix, ${N} frames (limits of frame animation)</title>
+<title>deluxecss — Matrix, ${N} frames (limits of frame animation)</title>
 ${links.join("\n")}
 <style>
   body{margin:0;padding:24px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
@@ -57,7 +57,7 @@ ${links.join("\n")}
   <p class="sz">CSS: ${sizeText(paths)} · across ${files.length} files</p>
   <div class="pixel-image palette" role="img" aria-label="Matrix film clip, frame-by-frame CSS">${layers}</div>
   ${cmdBlock(
-    `pixel-css 10m/matrix_{000..${String(N - 1).padStart(3, "0")}}.png --animate --anim-mode frames \\\n` +
+    `deluxecss 10m/matrix_{000..${String(N - 1).padStart(3, "0")}}.png --animate --anim-mode frames \\\n` +
     `  --duration 9 --resize 256 --max-colors 256 --inline-palette --chunk 20 -o matrix.css\n` +
     `# then split matrix.css into ${files.length} part-*.css files (see gen.mjs)`,
   )}

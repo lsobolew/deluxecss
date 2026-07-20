@@ -42,6 +42,7 @@
   "cssVarPrefix": "color",
   "selector": ".pixel-image",
   "layerClass": "pixel-image__layer",
+  "singleElement": false,
   "hasAlpha": true,
   "animation": {
     "mode": "overlay-palette",

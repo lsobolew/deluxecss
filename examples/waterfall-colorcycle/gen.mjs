@@ -3,13 +3,13 @@
 //   • layered (multi-layer) static base   • animation cropped to just the pixels
 //   that change (overlay-palette)          • static colors inlined as literals
 // Shown next to the original GIF for comparison. Size badge baked in.
-// Run from the pixel-css dir: node examples/waterfall-colorcycle/gen.mjs
+// Run from the repo root: node examples/waterfall-colorcycle/gen.mjs
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { sizeText, fileSize, backLink, cmdBlock, CLI } from "../../scripts/example-utils.mjs";
 
-const CMD = "pixel-css monkey_island_waterfal.gif --animate --anim-mode overlay-palette \\\n  --inline-static-colors --max-colors-static 256 --max-colors-animated 24 -o waterfall.css";
+const CMD = "deluxecss monkey_island_waterfal.gif --animate --anim-mode overlay-palette \\\n  --inline-static-colors --max-colors-static 256 --max-colors-animated 24 -o waterfall.css";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const gif = fileURLToPath(new URL("../assets/monkey_island_waterfal.gif", import.meta.url));
@@ -30,7 +30,7 @@ const layers = Array.from({ length: m.layerCount }, () => `<div class="pixel-ima
 
 writeFileSync(`${dir}/index.html`, `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>pixel-css — waterfall, color cycling (vs original GIF)</title>
+<title>deluxecss — waterfall, color cycling (vs original GIF)</title>
 <link rel="stylesheet" href="waterfall.css">
 <style>
   body{margin:0;padding:24px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}

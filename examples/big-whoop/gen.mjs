@@ -3,7 +3,7 @@
 //  - retro palettes: CGA 4, EGA 16, VGA 256 colors (multi-layer)
 //  - the original PNG (image-rendering: pixelated) for comparison
 // Each variant gets its own selector so they can coexist, a size caption, and
-// its own standalone page (linked from its tile). Run from the pixel-css dir:
+// its own standalone page (linked from its tile). Run from the repo root:
 //   node examples/big-whoop/gen.mjs
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -33,7 +33,7 @@ for (const [name, sel, extra] of variants) {
   const m = JSON.parse(readFileSync(meta, "utf8"));
   info[name] = { sel: sel.slice(1), layers: m.layerCount, colors: m.colors.length, size: sizeText(css) };
   // The user-facing command (no demo-only --selector/--meta plumbing).
-  cmdFor[name] = `pixel-css big_whoop.png ${extra.join(" ")} -o big-whoop.css`;
+  cmdFor[name] = `deluxecss big_whoop.png ${extra.join(" ")} -o big-whoop.css`;
   rmSync(meta);
 }
 cmdFor.vga = cmdFor.multi; // VGA reuses the full-palette multi-layer output
@@ -53,7 +53,7 @@ const el = (sel, cssFile, layers, label) => {
 const standalone = (slug, cssFile, sel, layers, title, sub) => {
   writeFileSync(`${dir}/${slug}.html`, `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>pixel-css — Big Whoop (${title})</title>
+<title>deluxecss — Big Whoop (${title})</title>
 <link rel="stylesheet" href="${cssFile}">
 <style>
   body{margin:0;padding:28px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
@@ -90,7 +90,7 @@ const tile = (slug, sel, cssFile, layers, title, sub) => `<figure style="margin:
 
 writeFileSync(`${dir}/index.html`, `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>pixel-css — Big Whoop (static image, methods & palettes)</title>
+<title>deluxecss — Big Whoop (static image, methods & palettes)</title>
 ${["single", "multi", "cga", "ega"].map((n) => `<link rel="stylesheet" href="${n}.css">`).join("\n")}
 <style>
   body{margin:0;padding:28px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}

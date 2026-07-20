@@ -1,5 +1,5 @@
 {
-  "name": "pixel-css",
+  "name": "deluxecss",
   "version": "0.1.0",
   "description": "Convert any image into pure CSS pixel-art with a live-controllable color palette (CSS custom properties). CLI + library + zero-dependency Web Component.",
   "type": "module",
@@ -15,7 +15,7 @@
     "quantize"
   ],
   "bin": {
-    "pixel-css": "./dist/cli.js"
+    "deluxecss": "./dist/cli.js"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

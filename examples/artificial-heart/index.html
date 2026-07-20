@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>pixel-css — Artificial Heart (IFF color cycling)</title>
+<title>deluxecss — Artificial Heart (IFF color cycling)</title>
 <link rel="stylesheet" href="heart.css">
 <style>
   body{margin:0;padding:24px;background:#0b0f14;color:#e6e6e6;font-family:system-ui,sans-serif}
@@ -11,14 +11,14 @@
   <h1>Artificial Heart — Amiga color cycling, pure CSS</h1>
   <p>Decoded straight from <code>ljl_ArtificialHeart.iff</code> (IFF ILBM, 320×200,
   32 colors). The file's <code>CCRT</code> chunk defines a palette-cycle over
-  7 entries; pixel-css reads that range and reproduces
+  7 entries; deluxecss reads that range and reproduces
   the <em>exact</em> cycle — 7 frames @ 0.567s —
   as an overlay-palette animation, with the static art inlined. No GIF, no sampling.</p>
   <div class="pixel-image palette" role="img" aria-label="Artificial vs natural heart, Amiga color-cycling art"><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__layer"></div><div class="pixel-image__overlay"></div></div>
   <p class="sz">CSS: 2.13 MB → 77 KB gzip (28×)</p>
   <div style="margin-top:14px">
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#7f8ea3;margin-bottom:5px">Generated with</div>
-    <pre style="margin:0;padding:10px 12px;background:#12181f;border:1px solid #232a33;border-radius:8px;overflow-x:auto;font:12px/1.55 ui-monospace,monospace;color:#c9d4e0;white-space:pre">pixel-css ljl_ArtificialHeart.iff --animate --anim-mode overlay-palette \
+    <pre style="margin:0;padding:10px 12px;background:#12181f;border:1px solid #232a33;border-radius:8px;overflow-x:auto;font:12px/1.55 ui-monospace,monospace;color:#c9d4e0;white-space:pre">deluxecss ljl_ArtificialHeart.iff --animate --anim-mode overlay-palette \
   --inline-static-colors -o heart.css</pre>
   </div>
   <p style="font-size:12px;color:#7f8ea3">Original Amiga artwork by

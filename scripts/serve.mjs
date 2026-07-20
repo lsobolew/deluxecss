@@ -53,5 +53,5 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`pixel-css demo → http://localhost:${port}/examples/demo.html`);
+  console.log(`deluxecss demo → http://localhost:${port}/examples/demo.html`);
 });

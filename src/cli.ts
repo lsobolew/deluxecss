@@ -11,10 +11,10 @@ import {
 } from "./index.js";
 import type { Options } from "./types.js";
 
-const HELP = `pixel-css — convert an image into pure CSS pixel-art with a controllable palette
+const HELP = `deluxecss — convert an image into pure CSS pixel-art with a controllable palette
 
 Usage:
-  pixel-css <input> [options]
+  deluxecss <input> [options]
 
 Options:
   -o, --out <file>            Write CSS here (default: stdout)
@@ -208,6 +208,6 @@ function num(v: string | undefined): number | undefined {
 }
 
 main().catch((err: unknown) => {
-  process.stderr.write(`pixel-css: ${(err as Error).message}\n`);
+  process.stderr.write(`deluxecss: ${(err as Error).message}\n`);
   process.exit(1);
 });

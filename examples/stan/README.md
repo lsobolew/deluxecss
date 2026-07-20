@@ -7,7 +7,7 @@ tiny, few colors, few frames.
 ## Technique
 
 - **`animationMode: "frames"`** built from multiple input files
-  (`pixel-css frame1.png frame2.png … --animate`), quantized to a shared palette.
+  (`deluxecss frame1.png frame2.png … --animate`), quantized to a shared palette.
 - Frames swapped inside `@keyframes` (`step-end`), position + image co-declared
   per stop so both layers bind.
 
@@ -31,7 +31,7 @@ tiny, few colors, few frames.
 ```
 
 ```css
-/* built from four PNG files: pixel-css stan1.png stan2.png stan3.png stan4.png --animate */
+/* built from four PNG files: deluxecss stan1.png stan2.png stan3.png stan4.png --animate */
 .pixel-image__layer {
   background-size: 100% var(--pixel-height);
   animation: play 0.6s step-end infinite;   /* 4 frames → 25% apart */
