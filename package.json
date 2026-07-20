@@ -1,6 +1,6 @@
 {
   "name": "deluxecss",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Convert any image into pure CSS pixel-art with a live-controllable color palette (CSS custom properties). CLI + library + zero-dependency Web Component.",
   "type": "module",
   "license": "MIT",
